@@ -1,0 +1,3 @@
+[submodule "scrabble-dictionary"]
+	path = scrabble-dictionary
+	url = https://github.com/seanpatlan/scrabble-dictionary
