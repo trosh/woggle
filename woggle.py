@@ -193,7 +193,8 @@ while True:
 	found = findwords(ref, grid)
 	if len(found) > 30:
 		break
-print(f"There are {len(found)} words")
+print(f"There are {len(found)} words in the grid" if lang == "EN" \
+ else f"Il y a {len(found)} mots dans la grille")
 printgrid(grid)
 target = random.choice(found)
 targetpath = findpath(grid, target)
@@ -210,16 +211,12 @@ while n <= 5:
 		continue
 	path = findpath(grid, word)
 	if path is None:
-		if lang == "EN":
-			print(f"{word} is not in the grid")
-		else:
-			print(f"{word} n'est pas dans la grille")
+		print(f"{word} is not in the grid" if lang == "EN" \
+		 else f"{word} n'est pas dans la grille")
 		continue
 	if word not in found:
-		if lang == "EN":
-			print(f"{word} is not in the dictionary")
-		else:
-			print(f"{word} n'est pas dans le dictionnaire")
+		print(f"{word} is not in the dictionary" if lang == "EN" \
+		 else f"{word} n'est pas dans le dictionnaire")
 		continue
 	for pos in path:
 		if pos in targetpath:
@@ -228,14 +225,10 @@ while n <= 5:
 			grayed.add(pos)
 	printgrid(grid, path, good, grayed)
 	if word == target:
-		if lang == "EN":
-			print(f"you win in {n} round{'s' if n > 0 else ''}!!!")
-		else:
-			print(f"tu gagnes en {n} tour{'s' if n > 0 else ''} !!!")
+		print(f"you win in {n} round{'s' if n > 1 else ''}!!!" if lang == "EN" \
+		 else f"tu gagnes en {n} tour{'s' if n > 1 else ''} !!!")
 		break
 	n += 1
 else:
-	if lang == "EN":
-		print("you loooose...")
-	else:
-		print("tu as perdu ...")
+	print("you loooose..." if lang == "EN" \
+	 else "tu as perdu ...")
