@@ -2,7 +2,8 @@
 # vim: ts=8:sts=8:sw=8:noexpandtab
 
 import random
-from datetime import datetime
+#from datetime import datetime
+import unicodedata
 
 # From http://www.bananagrammer.com/2013/10/the-boggle-cube-redesign-and-its-effect.html
 # "q" == "QU"
@@ -28,12 +29,13 @@ dice = {
 }
 
 def buildref(file):
-	t = datetime.now()
+	#t = datetime.now()
 	ref = dict()
 	numwords = 0
 	with open(file, "r") as words_f:
 		for line in words_f:
-			word = line.strip().upper()
+			word = unicodedata.normalize("NFD", line.strip().upper()) \
+				.encode("ascii", "ignore").decode("utf-8")
 			length = len(word)
 			if length <= 3:
 				continue
@@ -45,7 +47,9 @@ def buildref(file):
 			if True not in _ref:
 				_ref[True] = "%"
 				numwords += 1
-	ms = (datetime.now() - t).total_seconds() * 1000
+			if numwords % 10000 == 0:
+				print(numwords, end="\r")
+	#ms = (datetime.now() - t).total_seconds() * 1000
 	#print(f"Built dict containing {numwords} words in {ms:g}ms")
 	return ref, numwords
 
@@ -64,7 +68,7 @@ def inref(ref, word):
 def randgrid(diceset):
 	grid = ["#" for i in range(16)]
 	thrown = list()
-	for die in dice["New"]:
+	for die in dice[diceset]:
 		thrown.append(random.choice(die))
 	for i in range(4):
 		for j in range(4):
@@ -74,7 +78,7 @@ def randgrid(diceset):
 	assert len(thrown) == 0
 	return grid
 
-def printgrid(grid, path=None, good=None, grayed=None):
+def printgrid(grid, path=None, good=None, bad=None):
 	for i in range(4):
 		for j in range(4):
 			c = grid[i*4+j].replace("q", "QU")
@@ -86,8 +90,8 @@ def printgrid(grid, path=None, good=None, grayed=None):
 					fmt = "1;42;30"
 				else:
 					fmt = "42;30"
-			elif grayed is not None \
-			and (i,j) in grayed:
+			elif bad is not None \
+			and (i,j) in bad:
 				if path is not None \
 				and (i,j) in path:
 					fmt = "1;41;30"
@@ -97,11 +101,10 @@ def printgrid(grid, path=None, good=None, grayed=None):
 		print()
 	print()
 
-done = [False] * 16
 word = ""
-def _findwords(ref, grid, found, pos):
+def _findwords(ref, grid, done, found, pos):
 	i, j = pos
-	global word, done
+	global word
 	assert not done[i*4+j]
 	done[i*4+j] = True
 	word += grid[i*4+j]
@@ -115,19 +118,31 @@ def _findwords(ref, grid, found, pos):
 		for ii in range(max(0,i-1),min(4,i+2)):
 			for jj in range(max(0,j-1),min(4,j+2)):
 				if not done[ii*4+jj]:
-					_findwords(ref, grid, found, (ii,jj))
+					_findwords(ref, grid, done, found, (ii,jj))
 	word = word[:-1]
 	done[i*4+j] = False
 
 def findwords(ref, grid):
-	t = datetime.now()
+	#t = datetime.now()
 	found = []
+	done = [False] * 16
+	global word
+	word = ""
 	for i in range(4):
 		for j in range(4):
-			_findwords(ref, grid, found, (i,j))
-	ms = (datetime.now() - t).total_seconds() * 1000
+			_findwords(ref, grid, done, found, (i,j))
+	#ms = (datetime.now() - t).total_seconds() * 1000
 	#print(f"Found {len(found)} words in {ms:g}ms")
 	return found
+
+def updatefound(grid, found, good, bad):
+	newfound = []
+	for word in found:
+		path = set(findpath(grid, word))
+		if good.issubset(path) \
+		and not path.intersection(bad):
+			newfound.append(word)
+	return newfound
 
 def printwords(found):
 	maxlength = 0
@@ -143,37 +158,37 @@ def printwords(found):
 	if curlen > 0:
 		print()
 
-def _findpath(grid, word, pos):
+def _findpath(grid, done, word, pos):
 	i, j = pos
-	global done
 	assert not done[i*4+j]
 	assert len(word) > 0
+	qu = (grid[i*4+j] == "q" and word[:2] == "QU")
+	if grid[i*4+j] != word[0] and not qu:
+		return None
+	if len(word) == 1:
+		return [(i,j)]
 	done[i*4+j] = True
 	for ii in range(max(0,i-1),min(4,i+2)):
 		for jj in range(max(0,j-1),min(4,j+2)):
 			if done[ii*4+jj]:
 				continue
-			qu = (grid[ii*4+jj] == "q" and word[:2] == "QU")
-			if grid[ii*4+jj] != word[0] and not qu:
-				continue
-			if len(word) == 1:
-				return [(ii,jj)]
 			if qu:
-				ret = _findpath(grid, word[2:], (ii,jj))
+				ret = _findpath(grid, done, word[2:], (ii,jj))
 			else:
-				ret = _findpath(grid, word[1:], (ii,jj))
+				ret = _findpath(grid, done, word[1:], (ii,jj))
 			if ret is not None:
+				done[i*4+j] = False
 				return [(ii,jj)] + ret
 	done[i*4+j] = False
+	return None
 
 def findpath(grid, word):
-	global done
-	done = [False] * 16
 	for i in range(4):
 		for j in range(4):
-			ret = _findpath(grid, word, (i,j))
+			done = [False] * 16
+			ret = _findpath(grid, done, word, (i,j))
 			if ret is not None:
-				return ret
+				return [(i,j)] + ret
 	return None
 
 print("EN/FR?")
@@ -189,49 +204,62 @@ while True:
 		print("invalid language")
 		continue
 	break
-print(f"The dictionary contains {numwords} words" if lang == "EN" \
- else f"Le dictionnaire contient {numwords} mots")
+print(f"The dictionary contains {numwords} words (≥ 4 letters)" if lang == "EN" \
+ else f"Le dictionnaire contient {numwords} mots (≥ 4 lettres)")
 while True:
-	grid = randgrid(diceset)
-	found = findwords(ref, grid)
-	if len(found) > 30:
+	while True:
+		grid = randgrid(diceset)
+		found = findwords(ref, grid)
+		if len(found) > 30:
+			break
+	print(f"There are {len(found)} words in the grid" if lang == "EN" \
+	 else f"Il y a {len(found)} mots dans la grille")
+	printgrid(grid)
+	target = random.choice(found)
+	targetpath = findpath(grid, target)
+	good = set()
+	bad = set()
+	n = 1
+	while n <= 5:
+		word = input(f"{n}/5 > ").upper()
+		if word == "":
+			printgrid(grid, path, good, bad)
+			continue
+		if word == "SPOIL ME":
+			printwords(found)
+			continue
+		if word == "SPOIL ME THE TARGET":
+			print(target)
+			continue
+		path = findpath(grid, word)
+		if path is None:
+			print(f"{word} is not in the grid" if lang == "EN" \
+			 else f"{word} n'est pas dans la grille", end=" ")
+			continue
+		if word not in found:
+			print(f"{word} is not in the dictionary" if lang == "EN" \
+			 else f"{word} n'est pas dans le dictionnaire", end=" ")
+			continue
+		for pos in path:
+			if pos in targetpath:
+				good.add(pos)
+			else:
+				bad.add(pos)
+		printgrid(grid, path, good, bad)
+		if word == target:
+			print(f"you win in {n} round{'s' if n > 1 else ''}!!!" if lang == "EN" \
+			 else f"tu gagnes en {n} tour{'s' if n > 1 else ''} !!!")
+			break
+		n += 1
+		found = updatefound(grid, found, good, bad)
+		print(f"{len(found)} words possible left" if lang == "EN" \
+		 else f"Il reste {len(found)} mots possibles")
+	else:
+		print(f"you loose... the word was {target}" if lang == "EN" \
+		 else f"tu as perdu ... le mot était {target}")
+	print()
+	print("play again? (y/N)" if lang == "EN" \
+	 else "rejouer ? (o/N)")
+	cmd = input("> ")
+	if cmd not in ["y", "Y", "o", "O"]:
 		break
-print(f"There are {len(found)} words in the grid" if lang == "EN" \
- else f"Il y a {len(found)} mots dans la grille")
-printgrid(grid)
-target = random.choice(found)
-targetpath = findpath(grid, target)
-good = set()
-grayed = set()
-n = 1
-while n <= 5:
-	word = input(f"{n}/5 > ").upper()
-	if word == "SPOIL ME":
-		printwords(found)
-		continue
-	if word == "SPOIL ME THE TARGET":
-		print(target)
-		continue
-	path = findpath(grid, word)
-	if path is None:
-		print(f"{word} is not in the grid" if lang == "EN" \
-		 else f"{word} n'est pas dans la grille")
-		continue
-	if word not in found:
-		print(f"{word} is not in the dictionary" if lang == "EN" \
-		 else f"{word} n'est pas dans le dictionnaire")
-		continue
-	for pos in path:
-		if pos in targetpath:
-			good.add(pos)
-		else:
-			grayed.add(pos)
-	printgrid(grid, path, good, grayed)
-	if word == target:
-		print(f"you win in {n} round{'s' if n > 1 else ''}!!!" if lang == "EN" \
-		 else f"tu gagnes en {n} tour{'s' if n > 1 else ''} !!!")
-		break
-	n += 1
-else:
-	print("you loooose..." if lang == "EN" \
-	 else "tu as perdu ...")
