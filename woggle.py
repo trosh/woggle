@@ -46,8 +46,8 @@ def buildref(file):
 				_ref[True] = "%"
 				numwords += 1
 	ms = (datetime.now() - t).total_seconds() * 1000
-	print(f"Built dict containing {numwords} words in {ms:g}ms")
-	return ref
+	#print(f"Built dict containing {numwords} words in {ms:g}ms")
+	return ref, numwords
 
 def inref(ref, word):
 	_ref = ref
@@ -95,6 +95,7 @@ def printgrid(grid, path=None, good=None, grayed=None):
 					fmt = "41;30"
 			print(f"\033[{fmt}m{c:3}\033[m", end="")
 		print()
+	print()
 
 done = [False] * 16
 word = ""
@@ -179,15 +180,17 @@ print("EN/FR?")
 while True:
 	lang = input("> ").upper()
 	if lang == "EN":
-		ref = buildref("scrabble-dictionary/dictionary.csv")
+		ref, numwords = buildref("scrabble-dictionary/dictionary.csv")
 		diceset = "Classic"
 	elif lang == "FR":
-		ref = buildref("liste.de.mots.francais.frgut.txt")
+		ref, numwords = buildref("liste.de.mots.francais.frgut.txt")
 		diceset = "International"
 	else:
 		print("invalid language")
 		continue
 	break
+print(f"The dictionary contains {numwords} words" if lang == "EN" \
+ else f"Le dictionnaire contient {numwords} mots")
 while True:
 	grid = randgrid(diceset)
 	found = findwords(ref, grid)
