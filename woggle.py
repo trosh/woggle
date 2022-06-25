@@ -236,7 +236,7 @@ while True:
 			print(f"{word} is not in the grid" if lang == "EN" \
 			 else f"{word} n'est pas dans la grille", end=" ")
 			continue
-		if word not in found:
+		if inref(ref, word) != True:
 			print(f"{word} is not in the dictionary" if lang == "EN" \
 			 else f"{word} n'est pas dans le dictionnaire", end=" ")
 			continue
@@ -251,6 +251,8 @@ while True:
 			 else f"tu gagnes en {n} tour{'s' if n > 1 else ''} !!!")
 			break
 		n += 1
+		if word in found:
+			found.remove(word)
 		found = updatefound(grid, found, good, bad)
 		print(f"{len(found)} words possible left" if lang == "EN" \
 		 else f"Il reste {len(found)} mots possibles")
@@ -258,8 +260,8 @@ while True:
 		print(f"you loose... the word was {target}" if lang == "EN" \
 		 else f"tu as perdu ... le mot était {target}")
 	print()
-	print("play again? (y/N)" if lang == "EN" \
-	 else "rejouer ? (o/N)")
+	print("play again? (Y/n)" if lang == "EN" \
+	 else "rejouer ? (O/n)")
 	cmd = input("> ")
-	if cmd not in ["y", "Y", "o", "O"]:
+	if cmd in ["n", "N"]:
 		break
