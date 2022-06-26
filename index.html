@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+<title>Woggle</title>
+<script type="module" src="woggle.js"></script>
+<style type="text/css">
+body {
+	background-color: #111;
+	color: #ddd;
+	font-family: courier;
+}
+div#container {
+	max-width: 280px;
+	margin: 0 auto;
+	padding: 20px;
+	background-color: #222;
+}
+header {
+}
+header > h1 {
+	text-align: center;
+}
+div#counter, div#remaining {
+	display: inline;
+	margin-left: 3em;
+}
+div#remaining {
+	text-align: right;
+}
+table#grid {
+	margin: 0 auto;
+}
+table#grid td {
+	background-color: #aaa;
+	color: #222;
+	width:  60px;
+	height: 60px;
+	text-align: center;
+	vertical-align: center;
+	user-select: none;
+	border-radius: 8px;
+}
+p#bottom {
+	margin: 0 1em;
+	font-size: 2em;
+}
+p#bottom > button {
+	padding: .5em;
+}
+</style>
+</head>
+<body>
+<div id="container">
+<header>
+	<h1>Woggle</h1>
+</header>
+<div id="top">
+	<div id="counter">0/5</div>
+	<div id="remaining">125 left</div>
+</div>
+<table id="grid">
+	<tbody></tbody>
+</table>
+<p id="bottom" style="text-align: right"><span id="word">␣␣␣␣</span><button id="enter">⏎</button>
+</div>
+</body>
+</html>

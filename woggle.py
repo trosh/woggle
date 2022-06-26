@@ -222,6 +222,8 @@ while True:
 	n = 1
 	while n <= 5:
 		word = input(f"{n}/5 > ").upper()
+		word = unicodedata.normalize("NFD", word) \
+			.encode("ascii", "ignore").decode("utf-8")
 		if word == "":
 			printgrid(grid, path, good, bad)
 			continue
