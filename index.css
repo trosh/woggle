@@ -2,10 +2,11 @@ body {
 	background-color: #111;
 	color: #ddd;
 	font-family: monospace;
-	font-size: 2.5em;
+	font-size: 2em;
 }
 div#container {
-	max-width: 560px;
+	max-width: 1000px;
+	width: 90%;
 	margin: 0 auto;
 	padding: 20px;
 	background-color: #222;
@@ -17,26 +18,28 @@ header > h1 {
 }
 div#counter, div#remaining {
 	display: inline;
-	margin-left: 2.5em;
+	margin-left: 2em;
 }
 div#remaining {
-	text-align: right;
+	padding-left: auto;
 }
 table#grid {
 	margin: 0 auto;
+	table-layout: fixed;
 }
 td {
 	background-color: #aaa;
 	color: #222;
-	width:  120px;
-	height: 120px;
+	width:  1.8em;
+	height: 1.8em;
+	max-width:  20%;
+	max-height: 20%;
 	margin: 2px;
 	text-align: center;
-	vertical-align: center;
 	user-select: none;
 	border-radius: 8px;
 	border: 2px solid rgba(0,0,0,0);
-	font-size: 2.2em;
+	font-size: 2em;
 }
 td.good {
 	background-color: green;
@@ -59,6 +62,6 @@ p#bottom {
 }
 p#bottom > button {
 	padding: 20px;
-	font-size: 50px;
+	font-size: 40px;
 	background-color: #aaa;
 }

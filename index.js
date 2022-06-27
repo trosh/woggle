@@ -159,7 +159,10 @@ function inpath(pos, path) {
 
 function updateword() {
 	let disp = document.querySelector("#word");
-	disp.textContent = word + "␣".repeat(Math.max(4-word.length, 1));
+	if (word.includes(" "))
+		disp.textContent = word;
+	else
+		disp.textContent = word + "␣".repeat(Math.max(4-word.length, 1));
 }
 
 function update() {
@@ -257,14 +260,16 @@ function play() {
 			if (!inpath(pos, good))
 				good.push(pos);
 		}
-		word = "you win ☺ replay?";
-		curpath = [];
+		word = "you win ";
+		curpath = target["path"];
 		update();
 		for (let g=0; g<16; ++g) {
 			let cell = document.querySelector(`#cell_${g}`);
 			cell.onclick = null;
 		}
-		document.querySelector("#enter").onclick = (event) => { setupgame(); };
+		let enter = document.querySelector("#enter");
+		enter.textContent = "replay";
+		enter.onclick = (event) => { setupgame(); };
 	} else {
 		word = "";
 		curpath = [];
@@ -279,7 +284,7 @@ function incrementcounter() {
 	if (counter <= 5) {
 		disp.textContent = `${counter}/5 tries`;
 	} else {
-		word = `you lose ☹ word was: ${target["word"]}; replay?`;
+		word = `word was ${target["word"]} `;
 		curpath = target["path"];
 		update();
 		disp.textContent = "💀/5 tries";
@@ -287,7 +292,9 @@ function incrementcounter() {
 			let cell = document.querySelector(`#cell_${g}`);
 			cell.onclick = null;
 		}
-		document.querySelector("#enter").onclick = (event) => { setupgame(); };
+		let enter = document.querySelector("#enter");
+		enter.textContent = "replay";
+		enter.onclick = (event) => { setupgame(); };
 	}
 }
 
@@ -321,15 +328,27 @@ function setupgame() {
 	while (true) {
 		grid = randgrid("Classic");
 		found = findwords(ref, grid);
-		if (found.length > 30)
+		if (found.length > 40)
 			break;
 		console.log(`Only ${found.length} words in the grid, throwing the dice again`);
 	}
-	target = found[Math.floor(Math.random() * found.length)];
+	let weights = [];
+	let i;
+	for (i=0; i<found.length; ++i)
+		weights[i] = (found[i]["path"].length - 3) + (weights[i-1] || 0);
+	console.log(weights);
+	let rand_t = Math.random() * weights[weights.length - 1];
+	for (i=0; i<weights.length; ++i) {
+		if (weights[i] > rand_t)
+			break;
+	}
+	target = found[i];
 	console.log(target);
 	updatecells(grid);
 	updateremaining();
-	document.querySelector("#enter").onclick = (event) => { play(); };
+	let enter = document.querySelector("#enter");
+	enter.onclick = (event) => { play(); };
+	enter.textContent = "⏎";
 	update();
 	for (let g=0; g<16; ++g) {
 		let cell = document.querySelector(`#cell_${g}`);
