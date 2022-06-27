@@ -35,11 +35,18 @@ def outputref(f, ref):
 		outputref(f, ref[l])
 	f.write(";")
 
-ref = buildref("liste.de.mots.francais.frgut.txt")
-
-import json
-
-with open("fr.json", "w") as f:
-	json.dump(ref, f)
-#with open("fr.dic", "w") as f:
-	#outputref(f, ref)
+with open("dic.js", "w") as f:
+	# Prefix
+	f.write('export const dic = {\n')
+	# English dictionary
+	f.write('\t"en": "')
+	ref = buildref("dictionary/popular.txt")
+	outputref(f, ref)
+	f.write('",\n')
+	# French dictionary
+	f.write('\t"fr": "')
+	ref = buildref("liste.de.mots.francais.frgut.txt")
+	outputref(f, ref)
+	f.write('",\n')
+	# Suffix
+	f.write('};\n')

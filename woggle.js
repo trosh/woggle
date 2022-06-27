@@ -1,22 +1,27 @@
-import {dic} from "./fr.dic.js";
+import {dic} from "./dic.js";
 
-function buildref() {
+let ref, grid, found, target, word, counter;
+let valid, curpath, good, bad;
+
+function buildref(langs) {
 	let ref = {};
 	let numwords = 0;
 	let pos = [];
 	let _ref = ref;
-	for (let c of dic) {
-		if (c == ".") {
-			_ref[true] = true;
-			if (++numwords % 10000 == 0)
-				console.log(numwords);
-		}
-		else if (c == ";")
-			_ref = pos.pop();
-		else {
-			_ref[c] = {};
-			pos.push(_ref);
-			_ref = _ref[c];
+	for (let lang of langs) {
+		for (let c of dic[lang]) {
+			if (c == ".") {
+				_ref[true] = true;
+				if (++numwords % 10000 == 0)
+					console.log(numwords);
+			}
+			else if (c == ";")
+				_ref = pos.pop();
+			else {
+				_ref[c] = {};
+				pos.push(_ref);
+				_ref = _ref[c];
+			}
 		}
 	}
 	//assert(ref == _ref);
@@ -79,19 +84,23 @@ function randgrid(diceset) {
 	return grid;
 }
 
-function _findwords(ref, grid, done, found, word, i, j) {
+function _findwords(ref, grid, done, found, word, path) {
+	let [i, j] = path[path.length - 1];
 	//assert not done[i*4+j]
 	done[i*4+j] = true;
 	word += grid[i*4+j];
 	let _word = word.replaceAll("q", "QU");
 	let ret = inref(ref, _word);
-	if (ret === true && !found.includes(_word))
-		found.push(_word);
+	if (ret === true)
+		found.push({"path": [...path], "word": _word});
 	if (ret !== null) {
 		for (let ii=Math.max(0,i-1); ii<Math.min(4,i+2); ++ii) {
 		for (let jj=Math.max(0,j-1); jj<Math.min(4,j+2); ++jj) {
-			if (!done[ii*4+jj])
-				_findwords(ref, grid, done, found, word, ii, jj);
+			if (done[ii*4+jj])
+				continue;
+			path.push([ii,jj]);
+			_findwords(ref, grid, done, found, word, path);
+			path.pop();
 		}
 		}
 	}
@@ -105,7 +114,7 @@ function findwords(ref, grid) {
 		done.push(false);
 	for (let i=0; i<4; ++i) {
 	for (let j=0; j<4; ++j)
-		_findwords(ref, grid, done, found, "", i, j);
+		_findwords(ref, grid, done, found, "", [[i, j]]);
 	}
 	return found;
 }
@@ -115,17 +124,11 @@ function updatecells(grid) {
 		let cell = document.querySelector(`#cell_${g}`);
 		let c = grid[g];
 		if (c == "q")
-			cell.textContent = "Q";
+			cell.textContent = "QU";
 		else
 			cell.textContent = c;
 	}
 }
-
-let ref, grid, found;
-let valid = [];
-let curpath = [];
-let word = "";
-let counter = 0;
 
 function allvalid() {
 	for (let i=0; i<4; ++i)
@@ -133,48 +136,73 @@ function allvalid() {
 		valid.push([i,j]);
 }
 
+function comparepaths(p1, p2) {
+	if (p1.length != p2.length)
+		return false;
+	for (let n=0; n<p1.length; ++n) {
+		let [i1,j1] = p1[n];
+		let [i2,j2] = p2[n];
+		if (i1 != i2 || j1 != j2)
+			return false;
+	}
+	return true;
+}
+
+function inpath(pos, path) {
+	let [i,j] = pos;
+	for (let [ii,jj] of path) {
+		if (i == ii && j == jj)
+			return true;
+	}
+	return false;
+}
+
+function updateword() {
+	let disp = document.querySelector("#word");
+	disp.textContent = word + "␣".repeat(Math.max(4-word.length, 1));
+}
+
 function update() {
+	for (let g=0; g<16; ++g)
+		document.querySelector(`#cell_${g}`).classList = "";
 	if (curpath.length > 0) {
 		let nextvalid = [];
 		let [i,j] = curpath[curpath.length - 1];
 		for (let ii=Math.max(0,i-1); ii<Math.min(4,i+2); ++ii) {
 		for (let jj=Math.max(0,j-1); jj<Math.min(4,j+2); ++jj) {
-			let used = false;
-			for (let [ci,cj] of curpath) {
-				if (ii==ci && jj==cj) {
-					used = true;
-					break;
-				}
-			}
-			if (!used)
+			if (!inpath([ii,jj], curpath))
 				nextvalid.push([ii,jj]);
 		}
 		}
 		valid = nextvalid;
 	} else
 		allvalid();
-	let disp = document.querySelector("#word");
-	disp.textContent = word + "␣".repeat(Math.max(4-word.length, 1));
+	for (let [i,j] of curpath)
+		document.querySelector(`#cell_${i*4+j}`).classList.add("cur");
+	for (let [i,j] of good)
+		document.querySelector(`#cell_${i*4+j}`).classList.add("good");
+	for (let [i,j] of bad)
+		document.querySelector(`#cell_${i*4+j}`).classList.add("bad");
+	updateword();
+	//let enter = document.querySelector("#enter")
+	//if (word.length >= 4) enter.onclick = (event) => { play(); };
+	//else enter.onclick = null;
 }
 
 function addpos(i, j) {
 	let g = i*4+j;
-	console.log(`addpos(${grid[g]})`);
+	document.querySelector(`#cell_${g}`).classList.add("cur");
 	word += grid[g].replace("q", "QU");
-	if (word.length >= 4) {
-		let enter = document.querySelector("#enter");
-		enter.onclick = (event) => { play(); };
-	}
 	curpath.push([i,j]);
 	update();
 }
 
 function removefrompos(i, j) {
-	console.log(`removefrompos(${i},${j})`);
 	for (let n = curpath.length - 1; n >= 0; --n) {
 		let [ii,jj] = curpath[n];
 		curpath.splice(n, 1);
-		let c = grid[ii*4+jj].replace("q", "QU");
+		let g = ii*4+jj;
+		let c = grid[g].replace("q", "QU");
 		let m = word.lastIndexOf(c);
 		word = word.slice(0, m);
 		if (ii==i && jj==j)
@@ -183,35 +211,112 @@ function removefrompos(i, j) {
 	update();
 }
 
+function updatefound() {
+	let newfound = [];
+	for (let word of found) {
+		let ingood = true;
+		for (let pos of good) {
+			if (!inpath(pos, word["path"])) {
+				ingood = false;
+				break;
+			}
+		}
+		let hasbad = false;
+		for (let pos of bad) {
+			if (inpath(pos, word["path"])) {
+				hasbad = true;
+				break;
+			}
+		}
+		if (ingood && !hasbad)
+			newfound.push(word)
+	}
+	found = newfound;
+	updateremaining();
+}
+
 function play() {
-	if (inref(ref, word) === true) {
-		incrementcounter();
+	if (word.length < 4 || !inref(ref, word)) {
+		word = "";
+		curpath = [];
+		update();
+		return;
+	}
+	for (let pos of curpath) {
+		if (inpath(pos, target["path"])) {
+			if (!inpath(pos, good))
+				good.push(pos);
+		} else {
+			if (!inpath(pos, bad))
+				bad.push(pos);
+		}
+	}
+	updatefound();
+	if (word == target["word"]) { //comparepaths(curpath, target["path"]);
+		for (let pos of target["path"]) {
+			if (!inpath(pos, good))
+				good.push(pos);
+		}
+		word = "you win ☺ replay?";
+		curpath = [];
+		update();
+		for (let g=0; g<16; ++g) {
+			let cell = document.querySelector(`#cell_${g}`);
+			cell.onclick = null;
+		}
+		document.querySelector("#enter").onclick = (event) => { setupgame(); };
 	} else {
 		word = "";
 		curpath = [];
 		update();
+		incrementcounter();
 	}
-} 
+}
 
 function incrementcounter() {
 	++counter;
 	let disp = document.querySelector("#counter");
-	disp.textContent = `${counter}/5`;
+	if (counter <= 5) {
+		disp.textContent = `${counter}/5 tries`;
+	} else {
+		word = `you lose ☹ word was: ${target["word"]}; replay?`;
+		curpath = target["path"];
+		update();
+		disp.textContent = "💀/5 tries";
+		for (let g=0; g<16; ++g) {
+			let cell = document.querySelector(`#cell_${g}`);
+			cell.onclick = null;
+		}
+		document.querySelector("#enter").onclick = (event) => { setupgame(); };
+	}
 }
 
-window.onload = (event) => {
+function updateremaining() {
+	let remaining = document.querySelector("#remaining");
+	remaining.textContent = `${found.length} left`;
+}
+
+function setupgame() {
+	valid = [];
+	curpath = [];
+	good = [];
+	bad = [];
+	word = [];
+	counter = 0;
 	const tbody = document.querySelector("table#grid > tbody");
-	for (let i=0; i<4; ++i) {
-		let row = document.createElement("tr");
-		tbody.appendChild(row);
-		for (let j=0; j<4; ++j) {
-			let cell = document.createElement("td");
-			cell.id = `cell_${i*4+j}`;
-			row.appendChild(cell);
+	if (tbody.childElementCount == 0) {
+		for (let i=0; i<4; ++i) {
+			let row = document.createElement("tr");
+			tbody.appendChild(row);
+			for (let j=0; j<4; ++j) {
+				let cell = document.createElement("td");
+				cell.id = `cell_${i*4+j}`;
+				row.appendChild(cell);
+			}
 		}
 	}
 	let numwords;
-	[ref, numwords] = buildref();
+	[ref, numwords] = buildref(["en"]);
 	console.log(`There are ${numwords} words in the dictionary`);
 	while (true) {
 		grid = randgrid("Classic");
@@ -220,29 +325,31 @@ window.onload = (event) => {
 			break;
 		console.log(`Only ${found.length} words in the grid, throwing the dice again`);
 	}
-	console.log(`There are ${found.length} words in the grid`);
+	target = found[Math.floor(Math.random() * found.length)];
+	console.log(target);
 	updatecells(grid);
+	updateremaining();
+	document.querySelector("#enter").onclick = (event) => { play(); };
 	update();
 	for (let g=0; g<16; ++g) {
 		let cell = document.querySelector(`#cell_${g}`);
 		cell.onclick = (event) => {
-			console.log(`curpath=${curpath}`);
 			for (let [i,j] of curpath) {
 				if (i*4+j == g) {
 					removefrompos(i,j);
 					return;
 				}
 			}
-			console.log(`valid=${valid}`);
 			for (let [i,j] of valid) {
 				if (i*4+j == g) {
 					addpos(i, j);
 					return;
 				}
 			}
-			console.log("not in curpath nor valid");
 			// show help?
 		}
 	}
 	incrementcounter();
 };
+
+window.onload = (event) => { setupgame(); };
