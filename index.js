@@ -2,20 +2,19 @@ import {dic} from "./dic.js";
 
 let ref, grid, found, target, word, counter;
 let valid, curpath, good, bad;
+let curlangs = [];
 
 function buildref(langs) {
 	let ref = {};
 	let numwords = 0;
 	let pos = [];
-	let _ref = ref;
 	for (let lang of langs) {
+		let _ref = ref;
 		for (let c of dic[lang]) {
 			if (c == ".") {
 				_ref[true] = true;
-				if (++numwords % 10000 == 0)
-					console.log(numwords);
-			}
-			else if (c == ";")
+				++numwords;
+			} else if (c == ";")
 				_ref = pos.pop();
 			else {
 				_ref[c] = {};
@@ -84,12 +83,12 @@ function randgrid(diceset) {
 	return grid;
 }
 
-function _findwords(ref, grid, done, found, word, path) {
+function _findwords(ref, grid, done, found, w, path) {
 	let [i, j] = path[path.length - 1];
 	//assert not done[i*4+j]
 	done[i*4+j] = true;
-	word += grid[i*4+j];
-	let _word = word.replaceAll("q", "QU");
+	w += grid[i*4+j];
+	let _word = w.replaceAll("q", "QU");
 	let ret = inref(ref, _word);
 	if (ret === true)
 		found.push({"path": [...path], "word": _word});
@@ -99,7 +98,7 @@ function _findwords(ref, grid, done, found, word, path) {
 			if (done[ii*4+jj])
 				continue;
 			path.push([ii,jj]);
-			_findwords(ref, grid, done, found, word, path);
+			_findwords(ref, grid, done, found, w, path);
 			path.pop();
 		}
 		}
@@ -195,6 +194,8 @@ function update() {
 function addpos(i, j) {
 	let g = i*4+j;
 	document.querySelector(`#cell_${g}`).classList.add("cur");
+	if (word.includes(" "))
+		word = "";
 	word += grid[g].replace("q", "QU");
 	curpath.push([i,j]);
 	update();
@@ -239,8 +240,16 @@ function updatefound() {
 }
 
 function play() {
-	if (word.length < 4 || !inref(ref, word)) {
-		word = "";
+	if (word.includes(" "))
+		return;
+	if (word.length < 4) {
+		word += " too short ";
+		curpath = [];
+		update();
+		return;
+	}
+	if (!inref(ref, word)) {
+		word += " not in dict ";
 		curpath = [];
 		update();
 		return;
@@ -260,7 +269,7 @@ function play() {
 			if (!inpath(pos, good))
 				good.push(pos);
 		}
-		word = "you win ";
+		word = `you win with ${word} `;
 		curpath = target["path"];
 		update();
 		for (let g=0; g<16; ++g) {
@@ -269,7 +278,7 @@ function play() {
 		}
 		let enter = document.querySelector("#enter");
 		enter.textContent = "replay";
-		enter.onclick = (event) => { setupgame(); };
+		enter.onclick = (event) => { setupgame(curlangs); };
 	} else {
 		word = "";
 		curpath = [];
@@ -282,28 +291,28 @@ function incrementcounter() {
 	++counter;
 	let disp = document.querySelector("#counter");
 	if (counter <= 5) {
-		disp.textContent = `${counter}/5 tries`;
+		disp.textContent = counter;
 	} else {
 		word = `word was ${target["word"]} `;
 		curpath = target["path"];
 		update();
-		disp.textContent = "💀/5 tries";
+		disp.textContent = "💀";
 		for (let g=0; g<16; ++g) {
 			let cell = document.querySelector(`#cell_${g}`);
 			cell.onclick = null;
 		}
 		let enter = document.querySelector("#enter");
 		enter.textContent = "replay";
-		enter.onclick = (event) => { setupgame(); };
+		enter.onclick = (event) => { setupgame(curlangs); };
 	}
 }
 
 function updateremaining() {
 	let remaining = document.querySelector("#remaining");
-	remaining.textContent = `${found.length} left`;
+	remaining.textContent = found.length;
 }
 
-function setupgame() {
+function setupgame(langs) {
 	valid = [];
 	curpath = [];
 	good = [];
@@ -322,9 +331,45 @@ function setupgame() {
 			}
 		}
 	}
-	let numwords;
-	[ref, numwords] = buildref(["en"]);
-	console.log(`There are ${numwords} words in the dictionary`);
+	for (let button of document.querySelectorAll(".curlang"))
+		button.classList.remove("curlang");
+	document.querySelector(`#lang_${langs.join('')}`).classList.add("curlang");
+	// TODO make less ugly
+	let langchange = false;
+	for (let curlang of curlangs) {
+		let f = false;
+		for (let lang of langs) {
+			if (curlang == lang) {
+				f = true;
+				break;
+			}
+		}
+		if (!f) {
+			langchange = true;
+			break;
+		}
+	}
+	if (!langchange) {
+		for (let lang of langs) {
+			let f = false;
+			for (let curlang of curlangs) {
+				if (curlang == lang) {
+					f = true;
+					break;
+				}
+			}
+			if (!f) {
+				langchange = true;
+				break;
+			}
+		}
+	}
+	if (langchange) {
+		let numwords;
+		[ref, numwords] = buildref(langs);
+		console.log(`There are ${numwords} words in the dictionary`);
+	}
+	curlangs = langs;
 	while (true) {
 		grid = randgrid("Classic");
 		found = findwords(ref, grid);
@@ -336,7 +381,6 @@ function setupgame() {
 	let i;
 	for (i=0; i<found.length; ++i)
 		weights[i] = (found[i]["path"].length - 3) + (weights[i-1] || 0);
-	console.log(weights);
 	let rand_t = Math.random() * weights[weights.length - 1];
 	for (i=0; i<weights.length; ++i) {
 		if (weights[i] > rand_t)
@@ -371,4 +415,8 @@ function setupgame() {
 	incrementcounter();
 };
 
-window.onload = (event) => { setupgame(); };
+window.onload = (event) => { setupgame(["en"]); };
+
+document.querySelector("#lang_en").onclick = (event) => { setupgame(["en"]); };
+document.querySelector("#lang_fr").onclick = (event) => { setupgame(["fr"]); };
+document.querySelector("#lang_enfr").onclick = (event) => { setupgame(["en","fr"]); };
