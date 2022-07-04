@@ -3,16 +3,18 @@
 
 import unicodedata
 
-def buildref(fname):
+def buildref(fout, fname):
 	ref = dict()
 	numwords = 0
 	with open(fname, "r") as f:
 		for line in f:
-			word = unicodedata.normalize("NFD", line.strip().upper()) \
+			orig = line.strip()
+			word = unicodedata.normalize("NFD", orig.upper()) \
 				.encode("ascii", "ignore").decode("utf-8")
 			length = len(word)
-			if length <= 3:
+			if length < 5:
 				continue
+			fout.write(f'"{orig}",')
 			_ref = ref
 			for c in word:
 				if c not in _ref:
@@ -39,13 +41,15 @@ with open("dic.js", "w") as f:
 	# Prefix
 	f.write('export const dic = {\n')
 	# English dictionary
-	f.write('\t"en": "')
-	ref = buildref("dictionary/popular.txt")
+	f.write('\t"en_orig": [')
+	ref = buildref(f, "dictionary/popular.txt")
+	f.write('],\n\t"en": "')
 	outputref(f, ref)
 	f.write('",\n')
 	# French dictionary
-	f.write('\t"fr": "')
-	ref = buildref("liste.de.mots.francais.frgut.txt")
+	f.write('\t"fr_orig": [')
+	ref = buildref(f, "liste.de.mots.francais.frgut.txt")
+	f.write('],\n\t"fr": "')
 	outputref(f, ref)
 	f.write('",\n')
 	# Suffix

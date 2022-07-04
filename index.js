@@ -1,5 +1,7 @@
 import {dic} from "./dic.js";
 
+const MINLENGTH = 5;
+
 let ref, grid, found, target, word, counter;
 let valid, curpath, good, bad;
 let curlangs = [];
@@ -23,7 +25,6 @@ function buildref(langs) {
 			}
 		}
 	}
-	//assert(ref == _ref);
 	return [ref, numwords];
 }
 
@@ -159,9 +160,9 @@ function inpath(pos, path) {
 function updateword() {
 	let disp = document.querySelector("#word");
 	if (word.includes(" "))
-		disp.textContent = word;
+		disp.innerHTML = word;
 	else
-		disp.textContent = word + "␣".repeat(Math.max(4-word.length, 1));
+		disp.textContent = word + "␣".repeat(Math.max(MINLENGTH - word.length, 1));
 }
 
 function update() {
@@ -187,7 +188,7 @@ function update() {
 		document.querySelector(`#cell_${i*4+j}`).classList.add("bad");
 	updateword();
 	//let enter = document.querySelector("#enter")
-	//if (word.length >= 4) enter.onclick = (event) => { play(); };
+	//if (word.length >= MINLENGTH) enter.onclick = (event) => { play(); };
 	//else enter.onclick = null;
 }
 
@@ -242,7 +243,7 @@ function updatefound() {
 function play() {
 	if (word.includes(" "))
 		return;
-	if (word.length < 4) {
+	if (word.length < MINLENGTH) {
 		word += " too short ";
 		curpath = [];
 		update();
@@ -265,11 +266,24 @@ function play() {
 	}
 	updatefound();
 	if (word == target["word"]) { //comparepaths(curpath, target["path"]);
+		let match = false;
+		for (let lang of curlangs) {
+			for (let orig of dic[lang + "_orig"]) {
+				const conv = orig.toUpperCase().normalize("NFD")
+				                 .replace(/[\u0300-\u03f6]/g, "") ;
+				if (conv == word) {
+					match = `https://${lang}.wiktionary.org/wiki/${orig}`;
+					break;
+				}
+			}
+			if (match)
+				break;
+		}
 		for (let pos of target["path"]) {
 			if (!inpath(pos, good))
 				good.push(pos);
 		}
-		word = `you win with ${word} `;
+		word = `you win with <a href="${match}">${word}</a> `;
 		curpath = target["path"];
 		update();
 		for (let g=0; g<16; ++g) {
@@ -290,9 +304,11 @@ function play() {
 function incrementcounter() {
 	++counter;
 	let disp = document.querySelector("#counter");
-	if (counter <= 5) {
-		disp.textContent = counter;
-	} else {
+	if (counter == 5)
+		disp.textContent = "1 try left";
+	else if (counter < 5)
+		disp.textContent = (5+1 - counter) + " tries left";
+	else {
 		word = `word was ${target["word"]} `;
 		curpath = target["path"];
 		update();
@@ -368,12 +384,14 @@ function setupgame(langs) {
 		let numwords;
 		[ref, numwords] = buildref(langs);
 		console.log(`There are ${numwords} words in the dictionary`);
+		if (numwords == 0)
+			return;
 	}
 	curlangs = langs;
 	while (true) {
 		grid = randgrid("Classic");
 		found = findwords(ref, grid);
-		if (found.length > 40)
+		if (found.length > 30)
 			break;
 		console.log(`Only ${found.length} words in the grid, throwing the dice again`);
 	}
