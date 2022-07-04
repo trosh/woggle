@@ -2,14 +2,14 @@ body {
 	background-color: #111;
 	color: #ddd;
 	font-family: monospace;
-	font-size: 1.5em;
+	font-size: 1.8em;
 	margin-top: 0;
 }
 div#container {
 	max-width: 1000px;
 	width: 90%;
 	margin: 0 auto;
-	padding: 20px;
+	padding: 10px;
 	background-color: #222;
 }
 header {
@@ -32,8 +32,8 @@ table#grid {
 td {
 	background-color: #aaa;
 	color: #222;
-	width:  1.6em;
-	height: 1.6em;
+	width:  1.4em;
+	height: 1.4em;
 	max-width:  20%;
 	max-height: 20%;
 	margin: 2px;
@@ -59,7 +59,7 @@ td.curgood, td.curbad {
 }
 p#bottom {
 	margin: .5em .5em;
-	font-size: 2em;
+	font-size: 1.5em;
 	text-align: right;
 }
 #enter {
