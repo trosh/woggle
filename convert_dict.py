@@ -42,7 +42,7 @@ with open("dic.js", "w") as f:
 	f.write('export const dic = {\n')
 	# English dictionary
 	f.write('\t"en_orig": [')
-	ref = buildref(f, "dictionary/popular.txt")
+	ref = buildref(f, "dictionary/enable1.txt")
 	f.write('],\n\t"en": "')
 	outputref(f, ref)
 	f.write('",\n')
