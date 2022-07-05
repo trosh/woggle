@@ -240,6 +240,19 @@ function updatefound() {
 	updateremaining();
 }
 
+function findmatch(word) {
+	let match = [];
+	for (let lang of curlangs) {
+		for (let orig of dic[lang + "_orig"]) {
+			const conv = orig.toUpperCase().normalize("NFD")
+				.replace(/[\u0300-\u03f6]/g, "") ;
+			if (conv == word)
+				match.push(`<a href="https://${lang}.wiktionary.org/wiki/${orig}">${orig}</a>`);
+		}
+	}
+	return match;
+}
+
 function play() {
 	if (word.includes(" "))
 		return;
@@ -266,24 +279,17 @@ function play() {
 	}
 	updatefound();
 	if (word == target["word"]) { //comparepaths(curpath, target["path"]);
-		let match = false;
-		for (let lang of curlangs) {
-			for (let orig of dic[lang + "_orig"]) {
-				const conv = orig.toUpperCase().normalize("NFD")
-				                 .replace(/[\u0300-\u03f6]/g, "") ;
-				if (conv == word) {
-					match = `https://${lang}.wiktionary.org/wiki/${orig}`;
-					break;
-				}
-			}
-			if (match)
-				break;
-		}
+		let match = findmatch(word);
 		for (let pos of target["path"]) {
 			if (!inpath(pos, good))
 				good.push(pos);
 		}
-		word = `you win with <a href="${match}">${word}</a> `;
+		word = "you win with ";
+		if (match.length > 0) {
+			for (let omatch of match)
+				word += ` ${omatch} `;
+		} else
+			ord += target["path"] + " ";
 		curpath = target["path"];
 		update();
 		for (let g=0; g<16; ++g) {
@@ -309,7 +315,13 @@ function incrementcounter() {
 	else if (counter < 5)
 		disp.textContent = (5+1 - counter) + " tries left";
 	else {
-		word = `word was ${target["word"]} `;
+		let match = findmatch(target["word"]);
+		word = "word was ";
+		if (match.length > 0) {
+			for (let omatch of match)
+				word += ` ${omatch} `;
+		} else
+			ord += target["path"] + " ";
 		curpath = target["path"];
 		update();
 		disp.textContent = "💀";
