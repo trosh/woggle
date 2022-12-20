@@ -1,9 +1,67 @@
 import {dic} from "./dic.js";
 
-const MINLENGTH = 5;
+function getcookienames() {
+	return document.cookie.split("; ")
+		.map((cookie) => cookie.split("=")[0]);
+}
 
-let ref, grid, found, target, word, counter;
-let valid, curpath, good, bad;
+function getcookie(name) {
+	let ret = document.cookie.split("; ")
+		.find((row) => row.startsWith(name + "="))
+		?.split("=")[1];
+	if (ret?.length > 0)
+		console.log("Read cookie: " + ret);
+	else
+		console.log(`No cookie found with name “${name}”`);
+	return ret;
+}
+
+function setcookie(name, value) {
+	let str = `${name}=${value}; Max-Age=90000; SameSite=strict`; // 25h
+	console.log("Write cookie: " + str);
+	document.cookie = str;
+}
+
+function clearcookie(name) {
+	let str = name + "=; Max-Age=0; SameSite=strict; Path=/; Domain="+location.hostname;
+	console.log("Clear cookie: " + str);
+	document.cookie = str;
+}
+
+function srand(str) { // cyrb128
+	let h1 = 1779033703, h2 = 3144134277,
+	    h3 = 1013904242, h4 = 2773480762;
+	for (let i = 0, k; i < str.length; ++i) {
+		k = str.charCodeAt(i);
+		h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+		h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+		h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+		h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+	}
+	h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+	h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+	h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+	h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+	return [(h1^h2^h3^h4)>>>0, (h2^h1)>>>0, (h3^h1)>>>0, (h4^h1)>>>0];
+}
+
+function frand(seed) { // mulberry32
+	return function() {
+		var t = seed += 0x6D2B79F5;
+		t = Math.imul(t ^ t >>> 15, t | 1);
+		t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+		return ((t ^ t >>> 14) >>> 0); // / 4294967296;
+	}
+}
+
+let rand;
+
+const MINLENGTH = 4;
+const MINTARGETLENGTH = 5;
+const NUMTRIES = 5;
+
+let ref, grid, targets, found, target, word, counter;
+let valid, curpath, good, bad, histories;
 let curlangs = [];
 
 function buildref(langs) {
@@ -19,7 +77,8 @@ function buildref(langs) {
 			} else if (c == ";")
 				_ref = pos.pop();
 			else {
-				_ref[c] = {};
+				if (!_ref[c])
+					_ref[c] = {};
 				pos.push(_ref);
 				_ref = _ref[c];
 			}
@@ -71,12 +130,12 @@ function randgrid(diceset) {
 	// Throw each dice
 	let thrown = []
 	for (let d=0; d<dice[diceset].length; ++d) {
-		let n = Math.floor(Math.random() * 6);
+		let n = rand() % 6;
 		thrown.push(dice[diceset][d].charAt(n));
 	}
 	// Dice permutation
 	for (let g=0; g<16; ++g) {
-		let n = Math.floor(Math.random() * thrown.length);
+		let n = rand() % thrown.length;
 		grid[g] = thrown[n];
 		thrown.splice(n, 1);
 	}
@@ -84,14 +143,15 @@ function randgrid(diceset) {
 	return grid;
 }
 
-function _findwords(ref, grid, done, found, w, path) {
+function _findwords(ref, minlen, grid, done, found, w, path) {
 	let [i, j] = path[path.length - 1];
 	//assert not done[i*4+j]
 	done[i*4+j] = true;
 	w += grid[i*4+j];
 	let _word = w.replaceAll("q", "QU");
 	let ret = inref(ref, _word);
-	if (ret === true)
+	if (_word.length >= minlen
+	    && ret === true)
 		found.push({"path": [...path], "word": _word});
 	if (ret !== null) {
 		for (let ii=Math.max(0,i-1); ii<Math.min(4,i+2); ++ii) {
@@ -99,7 +159,7 @@ function _findwords(ref, grid, done, found, w, path) {
 			if (done[ii*4+jj])
 				continue;
 			path.push([ii,jj]);
-			_findwords(ref, grid, done, found, w, path);
+			_findwords(ref, minlen, grid, done, found, w, path);
 			path.pop();
 		}
 		}
@@ -107,14 +167,14 @@ function _findwords(ref, grid, done, found, w, path) {
 	done[i*4+j] = false;
 }
 
-function findwords(ref, grid) {
+function findwords(ref, minlen, grid) {
 	let found = [];
 	let done = [];
 	for (let i=0; i<16; ++i)
 		done.push(false);
 	for (let i=0; i<4; ++i) {
 	for (let j=0; j<4; ++j)
-		_findwords(ref, grid, done, found, "", [[i, j]]);
+		_findwords(ref, minlen, grid, done, found, "", [[i, j]]);
 	}
 	return found;
 }
@@ -162,7 +222,7 @@ function updateword() {
 	if (word.includes(" "))
 		disp.innerHTML = word;
 	else
-		disp.textContent = word + "␣".repeat(Math.max(MINLENGTH - word.length, 1));
+		disp.textContent = word + "␣";
 }
 
 function update() {
@@ -180,6 +240,8 @@ function update() {
 		valid = nextvalid;
 	} else
 		allvalid();
+	for (let [i,j] of curpath.slice(0, 1))
+		document.querySelector(`#cell_${i*4+j}`).classList.add("curfirst");
 	for (let [i,j] of curpath)
 		document.querySelector(`#cell_${i*4+j}`).classList.add("cur");
 	for (let [i,j] of good)
@@ -187,9 +249,6 @@ function update() {
 	for (let [i,j] of bad)
 		document.querySelector(`#cell_${i*4+j}`).classList.add("bad");
 	updateword();
-	//let enter = document.querySelector("#enter")
-	//if (word.length >= MINLENGTH) enter.onclick = (event) => { play(); };
-	//else enter.onclick = null;
 }
 
 function addpos(i, j) {
@@ -216,7 +275,7 @@ function removefrompos(i, j) {
 	update();
 }
 
-function updatefound() {
+function updatefound(found, usedword) {
 	let newfound = [];
 	for (let word of found) {
 		let ingood = true;
@@ -233,11 +292,10 @@ function updatefound() {
 				break;
 			}
 		}
-		if (ingood && !hasbad)
+		if (ingood && !hasbad && word["word"] != usedword)
 			newfound.push(word)
 	}
-	found = newfound;
-	updateremaining();
+	return newfound;
 }
 
 function findmatch(word) {
@@ -277,7 +335,16 @@ function play() {
 				bad.push(pos);
 		}
 	}
-	updatefound();
+	targets = updatefound(targets, word);
+	found   = updatefound(found, word);
+	updateremaining(targets);
+	let history = document.querySelector("#history");
+	history.children[counter - 1].textContent = word;
+	let curpathstr = curpath.map((pos) => pos.join("")).join("_");
+	console.log(curpathstr);
+	let cookiename = `hist_${curlangs.join("_")}_${counter}`;
+	if (!getcookie(cookiename))
+		setcookie(cookiename, curpathstr);
 	if (word == target["word"]) { //comparepaths(curpath, target["path"]);
 		let match = findmatch(word);
 		for (let pos of target["path"]) {
@@ -292,16 +359,17 @@ function play() {
 			ord += target["path"] + " ";
 		curpath = target["path"];
 		update();
+		history.children[counter - 1].classList.add("histwin");
 		for (let g=0; g<16; ++g) {
 			let cell = document.querySelector(`#cell_${g}`);
 			cell.onclick = null;
 		}
 		let enter = document.querySelector("#enter");
-		enter.textContent = "replay";
-		enter.onclick = (event) => { setupgame(curlangs); };
+		enter.textContent = "replay random";
+		enter.onclick = (event) => { setupgame(true); };
 	} else {
-		word = "";
 		curpath = [];
+		word = "";
 		update();
 		incrementcounter();
 	}
@@ -310,10 +378,10 @@ function play() {
 function incrementcounter() {
 	++counter;
 	let disp = document.querySelector("#counter");
-	if (counter == 5)
+	if (counter == NUMTRIES)
 		disp.textContent = "1 try left";
-	else if (counter < 5)
-		disp.textContent = (5+1 - counter) + " tries left";
+	else if (counter < NUMTRIES)
+		disp.textContent = (NUMTRIES+1 - counter) + " tries left";
 	else {
 		let match = findmatch(target["word"]);
 		word = "word was ";
@@ -331,21 +399,30 @@ function incrementcounter() {
 		}
 		let enter = document.querySelector("#enter");
 		enter.textContent = "replay";
-		enter.onclick = (event) => { setupgame(curlangs); };
+		enter.onclick = (event) => { setupgame(); };
 	}
 }
 
-function updateremaining() {
+function updateremaining(targets) {
 	let remaining = document.querySelector("#remaining");
-	remaining.textContent = found.length;
+	let num = targets.length;
+	if (num == 1)
+		remaining.textContent = "1 word left";
+	else
+		remaining.textContent = targets.length + " words left";
 }
 
-function setupgame(langs) {
+function setuplangs() {
+	document.querySelector("#lang_en").onclick = (event) => { setupgame(); };
+	document.querySelector("#lang_fr").onclick = (event) => { setupgame(); };
+}
+
+function setupgame(random=false) {
 	valid = [];
 	curpath = [];
 	good = [];
 	bad = [];
-	word = [];
+	word = "";
 	counter = 0;
 	const tbody = document.querySelector("table#grid > tbody");
 	if (tbody.childElementCount == 0) {
@@ -359,9 +436,12 @@ function setupgame(langs) {
 			}
 		}
 	}
-	for (let button of document.querySelectorAll(".curlang"))
-		button.classList.remove("curlang");
-	document.querySelector(`#lang_${langs.join('')}`).classList.add("curlang");
+	let langs = [];
+	for (let inputlang of document.querySelectorAll("input.lang"))
+		if (inputlang.checked)
+			langs.push(inputlang.id.split("_")[1]);
+	if (langs.length == 0)
+		return;
 	// TODO make less ugly
 	let langchange = false;
 	for (let curlang of curlangs) {
@@ -400,26 +480,37 @@ function setupgame(langs) {
 			return;
 	}
 	curlangs = langs;
+	let date = new Date().toISOString().slice(0, 10);
+	let seed = srand(date+langs);
+	if (random) {
+		seed = (Math.random() * (1 << 30)) | 0;
+		console.log(`srand(${seed})`);
+		rand = frand(seed);
+	} else {
+		console.log(`date=${date} srand(${date+langs})`);
+		rand = frand(seed[0]);
+	}
 	while (true) {
 		grid = randgrid("Classic");
-		found = findwords(ref, grid);
-		if (found.length > 30)
+		targets = findwords(ref, MINTARGETLENGTH, grid);
+		if (targets.length > 30)
 			break;
-		console.log(`Only ${found.length} words in the grid, throwing the dice again`);
+		console.log(`Only ${targets.length} target words in the grid, throwing the dice again`);
 	}
 	let weights = [];
 	let i;
-	for (i=0; i<found.length; ++i)
-		weights[i] = (found[i]["path"].length - 3) + (weights[i-1] || 0);
-	let rand_t = Math.random() * weights[weights.length - 1];
+	for (i=0; i<targets.length; ++i)
+		weights[i] = (targets[i]["path"].length - 3) + (weights[i-1] || 0);
+	let rand_t = rand() % weights[weights.length - 1];
 	for (i=0; i<weights.length; ++i) {
 		if (weights[i] > rand_t)
 			break;
 	}
-	target = found[i];
+	target = targets[i];
 	console.log(target);
+	found = findwords(ref, MINLENGTH, grid);
 	updatecells(grid);
-	updateremaining();
+	updateremaining(targets);
 	let enter = document.querySelector("#enter");
 	enter.onclick = (event) => { play(); };
 	enter.textContent = "⏎";
@@ -442,11 +533,37 @@ function setupgame(langs) {
 			// show help?
 		}
 	}
+	let history = document.querySelector("#history");
+	for (let histli of history.children) {
+		histli.textContent = "";
+		histli.classList = "";
+	}
 	incrementcounter();
-};
+	if (!random) {
+		let prevdate = getcookie("date");
+		console.log(`date=${prevdate} (read from cookies)`);
+		if (!prevdate)
+			setcookie("date", date);
+		else if (date !== prevdate) {
+			console.log(`currentdate=${date} ≠ date=${prevdate} → clear cookies`);
+			for (let cookiename of getcookienames())
+				clearcookie(cookiename);
+			setcookie("date", date);
+		} else {
+			for (let t=1; t<=NUMTRIES; ++t) {
+				let path = getcookie(`hist_${langs.join("_")}_${t}`);
+				if (path?.length > 0) {
+					curpath = path.split("_")
+						.map((pair) => [Number(pair[0]), Number(pair[1])]);
+					word = curpath.map((pos) => grid[pos[0]*4+pos[1]]).join("");
+					play();
+				} else
+					break;
+			}
+		}
+	}
+}
 
-window.onload = (event) => { setupgame(["en"]); };
+window.onload = (event) => { setupgame(); };
 
-document.querySelector("#lang_en").onclick = (event) => { setupgame(["en"]); };
-document.querySelector("#lang_fr").onclick = (event) => { setupgame(["fr"]); };
-document.querySelector("#lang_enfr").onclick = (event) => { setupgame(["en","fr"]); };
+setuplangs();

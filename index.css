@@ -2,7 +2,7 @@ body {
 	background-color: #111;
 	color: #ddd;
 	font-family: monospace;
-	font-size: 1.8em;
+	font-size: 1.7em;
 	margin-top: 0;
 }
 div#container {
@@ -18,11 +18,7 @@ header {
 header > h1 {
 	margin-top: 0;
 }
-.curlang {
-	display: none;
-}
 #top {
-
 	text-align: center;
 }
 table#grid {
@@ -51,10 +47,10 @@ td.bad {
 	background-color: red;
 	color: #ddd;
 }
-td.curgood, td.curbad, td.cur {
+td.cur {
 	border-color: yellow;
 }
-td.curgood, td.curbad {
+td.curfirst {
 	color: yellow;
 }
 p#bottom {
@@ -66,4 +62,16 @@ p#bottom {
 	padding: 10px;
 	font-size: 40px;
 	background-color: #aaa;
+}
+#history {
+	padding: 0;
+}
+#history > li {
+	width: 10em;
+	margin: 1px auto;
+	background-color: #333;
+	list-style-position: inside;
+}
+li.histwin {
+	color: green;
 }
