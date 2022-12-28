@@ -507,7 +507,7 @@ function setupgame(random=false) {
 			break;
 	}
 	target = targets[i];
-	console.log(target);
+	//console.log(target);
 	found = findwords(ref, MINLENGTH, grid);
 	updatecells(grid);
 	updateremaining(targets);
