@@ -10,7 +10,7 @@ function getcookie(name) {
 		.find((row) => row.startsWith(name + "="))
 		?.split("=")[1];
 	if (ret?.length > 0)
-		console.log("Read cookie: " + ret);
+		console.log(`Read cookie: ${name} → ${ret}`);
 	else
 		console.log(`No cookie found with name “${name}”`);
 	return ret;
@@ -341,7 +341,7 @@ function play() {
 	let history = document.querySelector("#history");
 	history.children[counter - 1].textContent = word;
 	let curpathstr = curpath.map((pos) => pos.join("")).join("_");
-	console.log(curpathstr);
+	console.log(`curpathstr: ${curpathstr}`);
 	let cookiename = `hist_${curlangs.join("_")}_${counter}`;
 	if (!getcookie(cookiename))
 		setcookie(cookiename, curpathstr);
@@ -412,12 +412,9 @@ function updateremaining(targets) {
 		remaining.textContent = targets.length + " words left";
 }
 
-function setuplangs() {
-	document.querySelector("#lang_en").onclick = (event) => { setupgame(); };
-	document.querySelector("#lang_fr").onclick = (event) => { setupgame(); };
-}
 
 function setupgame(random=false) {
+	console.log(`setupgame(random=${random})`);
 	valid = [];
 	curpath = [];
 	good = [];
@@ -436,12 +433,18 @@ function setupgame(random=false) {
 			}
 		}
 	}
-	let langs = [];
-	for (let inputlang of document.querySelectorAll("input.lang"))
-		if (inputlang.checked)
-			langs.push(inputlang.id.split("_")[1]);
+	let langs = ["en"]; // default value
+	const getlang = document.URL.split("?")[1]?.split("&")
+		?.find((v) => v.startsWith("lang="))
+		?.split("=")[1];
+	if (getlang?.length > 0)
+		langs = getlang.split("_");
 	if (langs.length == 0)
 		return;
+	for (let inputlang of document.querySelectorAll("input.lang"))
+		inputlang.checked = false;
+	for (let inputlang of langs)
+		document.querySelector("input#lang_" + inputlang).checked = true;
 	// TODO make less ugly
 	let langchange = false;
 	for (let curlang of curlangs) {
@@ -570,6 +573,25 @@ function setupgame(random=false) {
 	}
 }
 
-window.onload = (event) => { setupgame(); };
+function chooselang() {
+	let langs = [];
+	for (let inputlang of document.querySelectorAll("input.lang")) {
+		if (inputlang.checked)
+			langs.push(inputlang.id.split("_")[1]);
+	}
+	if (langs.length == 0)
+		return;
+	langs.sort();
+	const url = document.URL.split("?")[0];
+	document.location.href = url + "?lang=" + langs.join("_");
+}
 
-setuplangs();
+function setuplangs() {
+	for (let inputlang of document.querySelectorAll("input.lang"))
+		inputlang.onclick = (event) => { chooselang(); };
+}
+
+window.onload = (event) => {
+	setuplangs();
+	setupgame();
+};
