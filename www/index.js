@@ -305,7 +305,7 @@ function findmatch(word) {
 			const conv = orig.toUpperCase().normalize("NFD")
 				.replace(/[\u0300-\u03f6]/g, "") ;
 			if (conv == word)
-				match.push(`<a href="https://${lang}.wiktionary.org/wiki/${orig}">${orig}</a>`);
+				match.push(`<a target="_blank" rel="noopener noreferrer" href="https://${lang}.wiktionary.org/wiki/${orig}">${orig}</a>`);
 		}
 	}
 	return match;
