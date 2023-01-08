@@ -313,18 +313,18 @@ function findmatch(word) {
 
 function play() {
 	if (word.includes(" "))
-		return;
+		return false;
 	if (word.length < MINLENGTH) {
 		word += " too short ";
 		curpath = [];
 		update();
-		return;
+		return false;
 	}
 	if (!inref(ref, word)) {
 		word += " not in dict ";
 		curpath = [];
 		update();
-		return;
+		return false;
 	}
 	for (let pos of curpath) {
 		if (inpath(pos, target["path"])) {
@@ -556,7 +556,13 @@ function setupgame(random=false) {
 					curpath = path.split("_")
 						.map((pair) => [Number(pair[0]), Number(pair[1])]);
 					word = curpath.map((pos) => grid[pos[0]*4+pos[1]]).join("");
-					play();
+					if (play() === false) {
+						console.log("Bad path read from cookie; clearing all cookies and refreshing game");
+						for (let cookiename of getcookienames())
+							clearcookie(cookiename);
+						setupgame();
+						break;
+					}
 				} else
 					break;
 			}
