@@ -413,8 +413,8 @@ function updateremaining(targets) {
 }
 
 
-function setupgame(random=false) {
-	console.log(`setupgame(random=${random})`);
+function inner_setupgame(random) {
+	console.log(`inner_setupgame(random=${random})`);
 	valid = [];
 	curpath = [];
 	good = [];
@@ -480,7 +480,7 @@ function setupgame(random=false) {
 		[ref, numwords] = buildref(langs);
 		console.log(`There are ${numwords} words in the dictionary`);
 		if (numwords == 0)
-			return;
+			return true;
 	}
 	curlangs = langs;
 	let date = new Date().toISOString().slice(0, 10);
@@ -563,13 +563,20 @@ function setupgame(random=false) {
 						console.log("Bad path read from cookie; clearing all cookies and refreshing game");
 						for (let cookiename of getcookienames())
 							clearcookie(cookiename);
-						setupgame();
-						break;
+						return false;
 					}
 				} else
 					break;
 			}
 		}
+	}
+	return true;
+}
+
+function setupgame(random=false) {
+	for (let i = 0; i < 50; ++i) {
+		if (inner_setupgame(random))
+			return;
 	}
 }
 
@@ -592,6 +599,7 @@ function setuplangs() {
 }
 
 window.onload = (event) => {
+	document.getElementById("update_date").textContent = "2023-02-11";
 	setuplangs();
 	setupgame();
 };
