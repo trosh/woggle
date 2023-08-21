@@ -16,7 +16,7 @@ function getcookie(name) {
 	if (ret?.length > 0)
 		console.log(`Read cookie: ${name} → ${ret}`);
 	else
-		console.log(`No cookie found with name “${name}”`);
+		console.warn(`No cookie found with name “${name}”`);
 	return ret;
 }
 
@@ -416,6 +416,39 @@ function updateremaining(targets) {
 		remaining.textContent = targets.length + " words left";
 }
 
+function setup_from_cookies(random, date, langs) {
+	if (random)
+		return false;
+	let prevdate = getcookie("date");
+	console.log(`date=${prevdate} (read from cookies)`);
+	if (!prevdate) {
+		setcookie("date", date);
+		return false;
+	}
+	if (date !== prevdate) {
+		console.warn(`currentdate=${date} ≠ date=${prevdate} → clear cookies`);
+		for (let cookiename of getcookienames())
+			clearcookie(cookiename);
+		setcookie("date", date);
+		return false;
+	}
+	// TODO try loading grid from cookies
+	for (let t=1; t<=NUMTRIES; ++t) {
+		let path = getcookie(`hist_${langs.join("_")}_${t}`);
+		if (path === undefined || path.length === 0)
+			return false;
+		curpath = path.split("_")
+			.map((pair) => [Number(pair[0]), Number(pair[1])]);
+		word = curpath.map((pos) => grid[pos[0]*4+pos[1]]).join("");
+		if (play() === false) {
+			console.warn("Bad path read from cookie; clearing all cookies and refreshing game");
+			for (let cookiename of getcookienames())
+				clearcookie(cookiename);
+			return false;
+		}
+	}
+	return true;
+}
 
 function inner_setupgame(random) {
 	console.log(`inner_setupgame(random=${random})`);
@@ -546,34 +579,7 @@ function inner_setupgame(random) {
 		histli.classList = "";
 	}
 	incrementcounter();
-	if (!random) {
-		let prevdate = getcookie("date");
-		console.log(`date=${prevdate} (read from cookies)`);
-		if (!prevdate)
-			setcookie("date", date);
-		else if (date !== prevdate) {
-			console.log(`currentdate=${date} ≠ date=${prevdate} → clear cookies`);
-			for (let cookiename of getcookienames())
-				clearcookie(cookiename);
-			setcookie("date", date);
-		} else {
-			for (let t=1; t<=NUMTRIES; ++t) {
-				let path = getcookie(`hist_${langs.join("_")}_${t}`);
-				if (path?.length > 0) {
-					curpath = path.split("_")
-						.map((pair) => [Number(pair[0]), Number(pair[1])]);
-					word = curpath.map((pos) => grid[pos[0]*4+pos[1]]).join("");
-					if (play() === false) {
-						console.log("Bad path read from cookie; clearing all cookies and refreshing game");
-						for (let cookiename of getcookienames())
-							clearcookie(cookiename);
-						return false;
-					}
-				} else
-					break;
-			}
-		}
-	}
+	setup_from_cookies(random, date, langs);
 	return true;
 }
 
@@ -582,6 +588,7 @@ function setupgame(random=false) {
 		if (inner_setupgame(random))
 			return;
 	}
+	console.error("I give up");
 }
 
 function chooselang() {
