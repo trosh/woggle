@@ -20,6 +20,7 @@ header > h1 {
 }
 #top {
 	text-align: center;
+	background-color: #111;
 }
 table#grid {
 	margin: 0 auto;
@@ -75,7 +76,52 @@ p#bottom {
 li.histwin {
 	color: green;
 }
-a {
-	color: #ddd;
-	text-decoration-style: dashed;
+a, span.findmatches {
+	text-decoration: underline dashed;
+}
+a:not(:visited) { color: orange; }
+a:visited  { color: darkorange; }
+div#bottombutts {
+	display: flex;
+	justify-content: space-between;
+}
+button {
+	font-size: 0.8em;
+}
+button#randomize, button#shareagain {
+	visibility: hidden;
+}
+div#endframebg {
+	position: absolute;
+	top: 0;
+	margin: 0 auto;
+	height: 100%;
+	width: 100%;
+	display: flex;
+	justify-content : space-around;
+	align-items: center;
+}
+div#endframe {
+	max-width: 75vw;
+	max-height: 75vh;
+	border: solid 1px white;
+	background-color: #333;
+	padding: 1vh 5vw;
+}
+#crossline {
+	text-align: right;
+	margin-bottom: -2em;
+}
+div#endframe > h1 {
+	text-align: center;
+}
+div#rules {
+	display: none;
+}
+div#rulesframe {
+	max-height: 60vh;
+	overflow-y: scroll;
+}
+p#langline {
+	line-height: 2em;
 }

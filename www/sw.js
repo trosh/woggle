@@ -2,8 +2,8 @@ const cacheName = "woggle-v1";
 const files = [
 	"/",
 	"/index.html",
-	"/index.css",
-	"/code1.js",
+	"/style4.css",
+	"/code4.js",
 	"/dic.js",
 	"/favicon.ico",
 	"/favicon-16x16.png",

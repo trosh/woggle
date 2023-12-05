@@ -2,19 +2,19 @@
 <head>
 <meta charset="UTF-8">
 <title>Woggle</title>
-<script type="module" src="code1.js"></script>
+<script type="module" src="code4.js"></script>
 <link rel="manifest" href="woggle.webmanifest">
-<link rel="stylesheet" type="text/css" href="style.css" media="screen">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" type="text/css" href="style4.css" media="screen">
+<meta name="viewport" content="initial-scale=1">
 </head>
 <body>
 <div id="container">
 <header>
 	<h1>Woggle</h1>
-	<input type="checkbox" class="lang" id="lang_en">🇬🇧
-	<input type="checkbox" class="lang" id="lang_fr">🇫🇷<br>
+	<p><span id="curlang"></span> <button id="changelang">change language</button><br>
 </header>
-<p id="top"><span id="counter">5 tries left</span>, <span id="remaining">0 words left</span></p>
+<p id="top"><span id="counter">5 tries left,</span> <span id="remaining">0 remaining words</span>
+<br><span id="longest"></span></p>
 <table id="grid">
 	<tbody></tbody>
 </table>
@@ -22,25 +22,34 @@
 <ol id="history">
 	<li> <li> <li> <li> <li>
 </ol>
-<hr>
+<div id="bottombutts">
+<button id="showrules">📜how to play</button>
+<button id="shareagain">📣share</button>
+<button id="randomize">🎲randomize</button>
+</div>
+</div>
+<div id="rules">
 <p>Build words using
 	<a target="_blank" rel="noopener noreferrer"
-	   href="https://en.wikipedia.org/wiki/Boggle#/media/File:Boggle_examples.svg">Boggle rules</a></p>
-<p>There is a target word, which is ≥ 5 letters</p>
-<p>Attempts are taken into account if valid words with ≥ 4 letters</p>
-<p>“Words left” are:
+	   href="https://en.wikipedia.org/wiki/Boggle#/media/File:Boggle_examples.svg">Boggle rules</a>
+<p>Type letters one by one and press ⏎ to confirm
+<p>To remove current path, press on the first letter (in yellow)
+<hr>
+<p>There is a target word, which is chosen randomly among the longest words in the grid
+<p>One standard grid and target word, per language, per day (starting midnight UTC), for all players
+<p>Attempts are taken into account if they are unplayed valid words with ≥ 4 letters
+<p>“Remaining words” are:
 <ul>
 	<li>Unplayed words
 	<li>Using every already uncovered green tile
 	<li>Avoiding every already uncovered red tile
 </ul>
-<p>One standard grid and target word, per language combination, per day</p>
-<p>To remove current path, press on the first letter (in yellow)</p>
-<p>Attempting the same word as the target with a different path is a win</p>
-<p>Longer words have increased selection probability</p>
+<p>Attempting the same word as the target with a different path is a win
+<p>Click on words shown like <span class="findmatches">VOILA</span> to see their meaning
 <hr>
-<p>Local same-day history relies on samesite cookies</p>
-<p><a href="https://github.com/trosh/woggle">Source code</a> (updated on <span id="update_date"></span>)</p>
+<p>Local same-day history relies on samesite cookies
+<button class="clearcookies">clear cookies</button>
+<p><a href="https://github.com/trosh/woggle">Source code</a> (updated on <span id="update_date"></span>)
 </div>
 </body>
 </html>
