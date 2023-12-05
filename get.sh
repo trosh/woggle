@@ -7,16 +7,12 @@ DELETE=--delete
 lftp -c "set ftp:list-options -a;
 	set net:connection-limit 4;
 	open '$FTPURL';
-	lcd $LCD;
-	cd $RCD;
+	lcd '$LCD';
+	cd '$RCD';
 	mirror \
 		$DELETE \
 		--no-perms \
-		--only-newer \
-		--exclude-glob '*.sh' \
-		--exclude-glob '.bash*' \
-		--exclude      '.ovhconfig' \
-		--exclude      'www/.htaccess' \
-		--exclude      'www/blog' \
-		--verbose;"
+		--exclude='www/blog/' \
+		--verbose=3 ;"
 chmod -R o+r "$LCD"
+		#--only-newer \
