@@ -357,8 +357,14 @@ function play() {
 		}
 		word = "you win with ";
 		if (match.length > 0) {
-			for (let omatch of match)
-				word += ` ${omatch} `;
+			let first = true;
+			for (let omatch of match) {
+				if (first)
+					first = false;
+				else
+					word += "/";
+				word += omatch;
+			}
 		} else
 			ord += target["path"] + " ";
 		curpath = target["path"];
@@ -390,8 +396,14 @@ function incrementcounter() {
 		let match = findmatch(target["word"]);
 		word = "word was ";
 		if (match.length > 0) {
-			for (let omatch of match)
-				word += ` ${omatch} `;
+			let first = true;
+			for (let omatch of match) {
+				if (first)
+					first = false;
+				else
+					word += "/";
+				word += omatch;
+			}
 		} else
 			ord += target["path"] + " ";
 		curpath = target["path"];

@@ -75,3 +75,7 @@ p#bottom {
 li.histwin {
 	color: green;
 }
+a {
+	color: #ddd;
+	text-decoration-style: dashed;
+}
