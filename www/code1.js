@@ -538,7 +538,8 @@ function inner_setupgame(random) {
 	let weights = [];
 	let i;
 	for (i=0; i<targets.length; ++i)
-		weights[i] = (targets[i]["path"].length - 3) + (weights[i-1] || 0);
+		weights[i] = (targets[i]["path"].length - MINTARGETLENGTH + 1)*2
+			+ (weights[i-1] || 0);
 	let rand_t = rand() % weights[weights.length - 1];
 	for (i=0; i<weights.length; ++i) {
 		if (weights[i] > rand_t)
