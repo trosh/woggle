@@ -3,7 +3,7 @@ const files = [
 	"/",
 	"/index.html",
 	"/index.css",
-	"/index.js",
+	"/code1.js",
 	"/dic.js",
 	"/favicon.ico",
 	"/favicon-16x16.png",
