@@ -409,11 +409,9 @@ function incrementcounter() {
 
 function updateremaining(targets) {
 	let remaining = document.querySelector("#remaining");
-	let num = targets.length;
-	if (num == 1)
-		remaining.textContent = "1 word left";
-	else
-		remaining.textContent = targets.length + " words left";
+	let numremain = targets.length;
+	let s = numremain > 1 ? "s" : "";
+	remaining.textContent = numremain + " word"+s + " left";
 }
 
 function setup_from_cookies(random, date, langs) {
