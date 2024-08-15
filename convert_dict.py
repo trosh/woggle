@@ -12,8 +12,6 @@ def buildref(fout, fname):
 			word = unicodedata.normalize("NFD", orig.upper()) \
 				.encode("ascii", "ignore").decode("utf-8")
 			length = len(word)
-			if length < 4:
-				continue
 			fout.write(f'"{orig}",')
 			_ref = ref
 			for c in word:

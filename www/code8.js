@@ -48,7 +48,6 @@ function frand(seed) { // mulberry32
 
 let rand;
 
-const MINLENGTH = 4;
 const NUMTRIES = 5;
 const LANGS = ["en", "fr", "en_fr"];
 
@@ -148,15 +147,14 @@ function randgrid(diceset) {
 	return grid;
 }
 
-function _findwords(ref, minlen, grid, done, found, w, path) {
+function _findwords(ref, grid, done, found, w, path) {
 	let [i, j] = path[path.length - 1];
 	//assert not done[i*4+j]
 	done[i*4+j] = true;
 	w += grid[i*4+j];
 	let _word = w.replaceAll("q", "QU");
 	let ret = inref(ref, _word);
-	if (_word.length >= minlen
-	    && ret === true) {
+	if (ret === true) {
 		//found.push({"path": [...path], "word": _word});
 		if (found[_word] === undefined)
 			found[_word] = [];
@@ -168,7 +166,7 @@ function _findwords(ref, minlen, grid, done, found, w, path) {
 			if (done[ii*4+jj])
 				continue;
 			path.push([ii,jj]);
-			_findwords(ref, minlen, grid, done, found, w, path);
+			_findwords(ref, grid, done, found, w, path);
 			path.pop();
 		}
 		}
@@ -177,14 +175,14 @@ function _findwords(ref, minlen, grid, done, found, w, path) {
 	return found;
 }
 
-function findwords(ref, minlen, grid) {
+function findwords(ref, grid) {
 	let found = {};
 	let done = [];
 	for (let i=0; i<16; ++i)
 		done.push(false);
 	for (let i=0; i<4; ++i) {
 	for (let j=0; j<4; ++j)
-		found = _findwords(ref, minlen, grid, done, found, "", [[i, j]]);
+		found = _findwords(ref, grid, done, found, "", [[i, j]]);
 	}
 	return found;
 }
@@ -460,12 +458,6 @@ function play() {
 	try {
 	if (word.includes(" "))
 		return false;
-	if (word.length < MINLENGTH) {
-		word += " too short ";
-		curpath = [];
-		update();
-		return false;
-	}
 	if (!inref(ref, word)) {
 		word += " not in dict ";
 		curpath = [];
@@ -715,7 +707,7 @@ function inner_setupgame() {
 	let targetwords;
 	while (true) {
 		grid = randgrid("Classic");
-		targets = findwords(ref, MINLENGTH, grid);
+		targets = findwords(ref, grid);
 		const longest = document.querySelector("#longest");
 		targetwords = Object.keys(targets);
 		if (targetwords.length > 30)
