@@ -1,42 +1,24 @@
 /* jshint esversion: 11 */
 
-if ("serviceWorker" in navigator) {
-	navigator.serviceWorker.register("sw.js");
-}
+// A décommenter quand j'aurais compris comment ça marche lolilol
+//if ("serviceWorker" in navigator) {
+//	navigator.serviceWorker.register("sw.js").then(reg => {
+//		reg.update();
+//	});
+//}
 
 import {dic} from "./dic.js";
 
-function getcookienames() {
-	return document.cookie.split("; ")
-		.map((cookie) => cookie.split("=")[0]);
+function getstored(name) {
+	const value = localStorage.getItem(name);
+	console.log("get stored: "+name+": "+value);
+	return value;
 }
 
-function getcookie(name) {
-	let ret = document.cookie.split("; ")
-		.find((row) => row.startsWith(name + "="))
-		?.split("=")[1];
-	if (ret?.length > 0)
-		console.log(`Read cookie: ${name} → ${ret}`);
-	else
-		console.warn(`No cookie found with name “${name}”`);
-	return ret;
+function setstored(name, value) {
+	console.log("set stored: "+name+": "+value);
+	localStorage.setItem(name, value);
 }
-
-function setcookie(name, value) {
-	let str = `${name}=${value}; Max-Age=90000; SameSite=strict`; // 25h
-	console.log("Write cookie: " + str);
-	document.cookie = str;
-}
-
-function clearcookie(name) {
-	let str = name + "=; Max-Age=0; SameSite=strict; Path=/; Domain="+location.hostname;
-	console.log("Clear cookie: " + str);
-	document.cookie = str;
-}
-
-//async function refreshUI() {
-//	await new Promise(r => setTimeout(r, 0));
-//}
 
 function srand(str) { // cyrb128
 	let h1 = 1779033703, h2 = 3144134277,
@@ -72,8 +54,8 @@ const LANGS = ["en", "fr", "en_fr"];
 
 let ref, grid, targets, targetword, targetpath, longestwords, word, counter;
 let valid, curpath, good, bad;
-let curlangs = [], getlang;
-let randomgame = false;
+let curlangs=[], getlang;
+let randomgame=false;
 
 function buildref(langs) {
 	let ref = {};
@@ -114,7 +96,7 @@ function langname(lang) {
 	if (lang === undefined)
 		lang = getlang;
 	switch (lang) {
-		case undefined:; //fallthrough
+		case undefined: //fallthrough
 		case "en": return "🇬🇧English";
 		case "fr": return "🇫🇷French";
 		case "en_fr": return "🇬🇧🇫🇷Franglais";
@@ -397,10 +379,9 @@ function showrulesframe() {
 	};
 	document.body.appendChild(endframebg);
 	rulesframe.innerHTML = document.querySelector("#rules").innerHTML;
-	for (let b of document.querySelectorAll(".clearcookies")) {
+	for (let b of document.querySelectorAll(".clearstorage")) {
 		b.onclick = () => {
-			for (let cookiename of getcookienames())
-				clearcookie(cookiename);
+			localStorage.clear();
 			location.reload();
 		};
 	}
@@ -445,11 +426,11 @@ function showendframe(win) {
 	if (win)
 		share.textContent = `I found the mystery ${longestwords[0].length}-letter word${extra} `
 			+ `for today's ${langname()} Woggle in ${counter} tr${counter>1?"ies":"y"}!\n`
-			+ `Can you do better?\n${document.URL}`;
+			+ `Can you find it too?\n${document.URL}`;
 	else
 		share.textContent = `Can you find the mystery ${longestwords[0].length}-letter word for today's ${langname()} Woggle in ${NUMTRIES} tries or less?\n${document.URL}`;
 	share.rows = 6;
-	share.cols = 50;
+	share.cols = 40;
 	const copy = document.createElement("button");
 	copy.id = "copy";
 	copy.textContent = "copy";
@@ -518,18 +499,18 @@ function play() {
 		w.onclick = findmatches;
 	let curpathstr = curpath.map((pos) => pos.join("")).join("_");
 	console.log(`curpathstr: ${curpathstr}`);
-	let cookiename = `hist_${curlangs.join("_")}_${counter}`;
-	if (!getcookie(cookiename))
-		setcookie(cookiename, curpathstr);
+	let storedname = `hist_${getlang}_${counter}`;
+	if (!getstored(storedname))
+		setstored(storedname, curpathstr);
 	if (word === targetword) { //comparepaths(curpath, targetpath);
 		for (let pos of targetpath) {
 			if (!inpath(pos, good))
 				good.push(pos);
 		}
-		word = "next grid @ 00:00 UTC";
+		word = "next @&nbsp;00:00&nbsp;UTC";
 		curpath = targetpath;
 		updateremaining(targets);
-		document.querySelector("#top").style.visibility = "hidden";
+		document.querySelector("#top").style.display = "none";
 		update();
 		history.children[counter - 1].classList.add("histwin");
 		for (let g=0; g<16; ++g) {
@@ -542,7 +523,7 @@ function play() {
 		randomize.style.visibility = "visible";
 		randomize.onclick = (event) => { randomgame = true; setupgame(); };
 		showendframe(true);
-		setcookie("win_"+getlang, "true");
+		setstored("win_"+getlang, "true");
 	} else {
 		curpath = [];
 		word = "";
@@ -559,9 +540,9 @@ function incrementcounter() {
 	++counter;
 	let disp = document.querySelector("#counter");
 	if (counter == NUMTRIES)
-		disp.textContent = "1 try left,";
+		disp.textContent = "1 try left";
 	else if (counter < NUMTRIES)
-		disp.textContent = (NUMTRIES+1 - counter) + " tries left,";
+		disp.textContent = (NUMTRIES+1 - counter) + " tries left";
 	else {
 		for (let pos of targetpath) {
 			if (!inpath(pos, good))
@@ -569,7 +550,7 @@ function incrementcounter() {
 		}
 		word = "word was <span class='findmatches'>"+targetword+"</span>";
 		curpath = targetpath;
-		document.querySelector("#top").style.visibility = "hidden";
+		document.querySelector("#top").style.display = "none";
 		update();
 		for (let w of document.querySelectorAll("span.findmatches"))
 			w.onclick = findmatches;
@@ -651,35 +632,35 @@ function showlongest(win) {
 	return ret;
 }
 
-function setup_from_cookies(date, langs) {
+function setup_from_localStorage(date, langs) {
 	if (randomgame)
 		return false;
-	let prevdate = getcookie("date");
-	console.log(`date=${prevdate} (read from cookies)`);
+	let prevdate = getstored("date");
+	console.log(`date=${prevdate} (read from localStorage)`);
 	if (!prevdate) {
-		setcookie("date", date);
+		setstored("date", date);
 		return false;
 	}
 	if (date !== prevdate) {
-		console.warn(`currentdate=${date} ≠ date=${prevdate} → clear cookies`);
-		for (let cookiename of getcookienames())
-			clearcookie(cookiename);
-		setcookie("date", date);
+		console.warn(`currentdate=${date} ≠ date=${prevdate} → clear localStorage`);
+		localStorage.clear();
+		setstored("date", date);
 		return false;
 	}
-	// TODO try loading grid from cookies
+	// TODO try loading grid from localStorage
 	for (let t=1; t<=NUMTRIES; ++t) {
-		let path = getcookie(`hist_${langs.join("_")}_${t}`);
-		if (path === undefined || path.length === 0)
+		let path = getstored(`hist_${getlang}_${t}`);
+		if (path === null || path.length === 0)
 			return false;
 		curpath = path.split("_")
 			.map((pair) => [Number(pair[0]), Number(pair[1])]);
 		word = curpath.map((pos) => grid[pos[0]*4+pos[1]])
 			.join("").replaceAll("q", "QU");
 		if (play() === false) {
-			console.warn("Bad path read from cookie; clearing all cookies and refreshing game");
-			for (let cookiename of getcookienames())
-				clearcookie(cookiename);
+			console.warn("Bad path read from localStorage; clearing all localStorage and refreshing game");
+			localStorage.clear();
+			word = "";
+			update();
 			return false;
 		}
 	}
@@ -706,15 +687,15 @@ function inner_setupgame() {
 			}
 		}
 	}
-	let langs = ["en"]; // default value
-	getlang = document.URL.split("?")[1]?.split("&")
-		?.find((v) => v.startsWith("lang="))
-		?.split("=")[1];
-	if (getlang?.length > 0)
-		langs = getlang.split("_");
-	if (langs.length == 0)
-		return;
-	document.querySelector("#curlang").textContent = langname();
+	let getlan;
+	if (document.URL.includes("?"))
+		getlang = document.URL.split("?")[1].split("&")
+			?.find((v) => v.startsWith("lang="))
+			?.split("=")[1];
+	if (getlang === undefined || getlang.length === 0)
+		getlang = "en"; // default value
+	document.querySelector("#curlang").textContent = langname(getlang);
+	let langs = getlang.split("_");
 	let numwords;
 	[ref, numwords] = buildref(langs);
 	console.log(`There are ${numwords} words in the dictionary`);
@@ -745,7 +726,7 @@ function inner_setupgame() {
 	targetword = longestwords[rand() % longestwords.length];
 	targetpath = targets[targetword][rand() % targets[targetword].length];
 	//console.log(targetword);
-	document.querySelector("#top")       .style.visibility = "visible";
+	document.querySelector("#top")       .style.display = "block";
 	document.querySelector("#enter")     .style.visibility = "visible";
 	document.querySelector("#shareagain").style.visibility = "hidden";
 	document.querySelector("#randomize") .style.visibility = "hidden";
@@ -781,7 +762,7 @@ function inner_setupgame() {
 		histli.classList = "";
 	}
 	incrementcounter();
-	setup_from_cookies(date, langs);
+	setup_from_localStorage(date, langs);
 	return true;
 }
 
@@ -796,19 +777,6 @@ function setupgame() {
 		throw e;
 	}
 	console.error("I give up");
-}
-
-function chooselang() {
-	let langs = [];
-	for (let inputlang of document.querySelectorAll("input.lang")) {
-		if (inputlang.checked)
-			langs.push(inputlang.id.split("_")[1]);
-	}
-	if (langs.length == 0)
-		return;
-	langs.sort();
-	const url = document.URL.split("?")[0];
-	document.location.href = url + "?lang=" + langs.join("_");
 }
 
 function setuplangs() {
@@ -826,8 +794,8 @@ function setuplangs() {
 		crossline.id = "crossline";
 		crossline.appendChild(cross);
 		endframe.appendChild(crossline);
-		const title = document.createElement("h1");
-		title.textContent = "📚";
+		const title = document.createElement("h2");
+		title.textContent = "Change language";
 		endframe.appendChild(title);
 		for (let lang of LANGS) {
 			const langbutt = document.createElement("button");
@@ -839,7 +807,7 @@ function setuplangs() {
 			const langline = document.createElement("p");
 			langline.classList.add("langline"); 
 			langline.appendChild(langbutt);
-			if (getcookie("win_"+lang) === "true")
+			if (getstored("win_"+lang) === "true")
 				langline.appendChild(document.createTextNode(" ✅"));
 			langline.appendChild(document.createElement("br"));
 			endframe.appendChild(langline);
@@ -854,7 +822,7 @@ function setuplangs() {
 }
 
 window.onload = (event) => {
-	document.querySelector("#update_date").textContent = "2023-12-06";
+	document.querySelector("#update_date").textContent = "2023-12-13";
 	document.querySelector("#showrules").onclick = showrulesframe;
 	setuplangs();
 	setupgame();

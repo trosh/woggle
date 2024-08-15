@@ -2,9 +2,9 @@
 <head>
 <meta charset="UTF-8">
 <title>Woggle</title>
-<script type="module" src="code4.js"></script>
+<script type="module" src="code8.js"></script>
 <link rel="manifest" href="woggle.webmanifest">
-<link rel="stylesheet" type="text/css" href="style4.css" media="screen">
+<link rel="stylesheet" type="text/css" href="style8.css" media="screen">
 <meta name="viewport" content="initial-scale=1">
 </head>
 <body>
@@ -13,20 +13,23 @@
 	<h1>Woggle</h1>
 	<p><span id="curlang"></span> <button id="changelang">change language</button><br>
 </header>
-<p id="top"><span id="counter">5 tries left,</span> <span id="remaining">0 remaining words</span>
-<br><span id="longest"></span></p>
+<div id="bottombutts">
+<button id="shareagain">📣share</button>
+<button id="showrules">📜how to play</button>
+<button id="randomize">🎲randomize</button>
+</div>
+<p id="top">
+	<span id="counter">5 tries left</span><br>
+	<span id="remaining">0 remaining words</span><br>
+	<span id="longest"></span>
+</p>
 <table id="grid">
 	<tbody></tbody>
 </table>
-<p id="bottom"><span id="word">␣␣␣␣␣</span> <button id="enter">⏎</button>
+<p id="bottom"><span id="word">LOADING…</span> <button id="enter">⏎</button>
 <ol id="history">
 	<li> <li> <li> <li> <li>
 </ol>
-<div id="bottombutts">
-<button id="showrules">📜how to play</button>
-<button id="shareagain">📣share</button>
-<button id="randomize">🎲randomize</button>
-</div>
 </div>
 <div id="rules">
 <p>Build words using
@@ -45,10 +48,11 @@
 	<li>Avoiding every already uncovered red tile
 </ul>
 <p>Attempting the same word as the target with a different path is a win
+<p>QU counts as 2 letters
 <p>Click on words shown like <span class="findmatches">VOILA</span> to see their meaning
 <hr>
-<p>Local same-day history relies on samesite cookies
-<button class="clearcookies">clear cookies</button>
+<p>Local same-day history relies on localStorage
+<button class="clearstorage">clear localStorage</button>
 <p><a href="https://github.com/trosh/woggle">Source code</a> (updated on <span id="update_date"></span>)
 </div>
 </body>

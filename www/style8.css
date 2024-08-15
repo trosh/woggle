@@ -84,9 +84,10 @@ a:visited  { color: darkorange; }
 div#bottombutts {
 	display: flex;
 	justify-content: space-between;
+	margin-bottom: 0.5em;
 }
 button {
-	font-size: 0.8em;
+	font-size: 0.7em;
 }
 button#randomize, button#shareagain {
 	visibility: hidden;
@@ -110,7 +111,9 @@ div#endframe {
 }
 #crossline {
 	text-align: right;
-	margin-bottom: -2em;
+	margin-top: -0.5vh;
+	margin-right: -2.5vw;
+	margin-bottom: -0.5vh;
 }
 div#endframe > h1 {
 	text-align: center;
