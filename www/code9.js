@@ -413,7 +413,7 @@ function showendframe(win) {
 		frame.parentElement.removeChild(frame);
 	};
 	document.body.appendChild(endframebg);
-	const extra = showlongest(win);
+	const extra = showtarget(win);
 	if (randomgame)
 		return; // Do not offer to share the results of a random grid
 	endframe.appendChild(document.createElement("hr"));
@@ -484,8 +484,6 @@ function play() {
 		}
 	}
 	targets = updatetargets(targets, word);
-	updateremaining(targets);
-	updatelongest(targets);
 	history.children[counter - 1].innerHTML = "<span class='findmatches'>"+word+"</span>";
 	for (let w of document.querySelectorAll("span.findmatches"))
 		w.onclick = findmatches;
@@ -501,7 +499,6 @@ function play() {
 		}
 		word = "next @&nbsp;00:00&nbsp;UTC";
 		curpath = targetpath;
-		updateremaining(targets);
 		document.querySelector("#top").style.display = "none";
 		update();
 		history.children[counter - 1].classList.add("histwin");
@@ -559,68 +556,13 @@ function incrementcounter() {
 	}
 }
 
-function updateremaining(targets) {
-	const remaining = document.querySelector("#remaining");
-	const numremain = Object.keys(targets).length;
-	const s = numremain > 1 ? "s" : "";
-	remaining.textContent = `${numremain} remaining word${s}`;
-}
-
-function updatelongest(targets) {
-	const longest = document.querySelector("#longest");
-	const sublongestwords = findlongestwords(targets);
-	const maxlength = longestwords[0].length;
-	let nummax = 0;
-	if (sublongestwords.length > 0
-	 && sublongestwords[0].length === maxlength)
-		nummax = sublongestwords.length;
-	const s = (nummax > 1 ? "s" : "");
-	longest.textContent = `${nummax} remaining ${maxlength}-letter word${s}`;
-}
-
-function showlongest(win) {
-	const maxlength = longestwords[0].length;
-	let otherlongest = [];
-	let unfoundlongest = [];
-	for (let w of longestwords) {
-		if (w === targetword)
-			continue;
-		let found = false;
-		let history = document.querySelector("#history");
-		for (let histli of history.children) {
-			if (histli.textContent
-			 && histli.textContent === w) {
-				found = true;
-				otherlongest.push(w);
-				break;
-			}
-		}
-		if (!found)
-			unfoundlongest.push(w);
-	}
+function showtarget(win) {
 	let ret = "";
 	let html = (win ? "Congratulation! You found the" : "Too bad… Try again tomorrow!<br>The");
-	html += ` ${longestwords.length>1?"target":"only "+maxlength+"-letter"} word`;
+	html += ` target word`;
 	html += `${win?"":" was"}: <span class="findmatches">${targetword}</span><br>`;
-	if (otherlongest.length > 0) {
-		const s = (otherlongest.length > 1);
-		html += `You ${win?"also ":""}found ${s?"these":"this"} ${maxlength}-letter word${s?"s":""}:<br>`;
-		for (let w of otherlongest)
-			html += `<span class='findmatches'>${w}</span> `;
-		ret = ` (+${otherlongest.length} extra word${s?"s":""} 💪)`;
-	}
-	if (unfoundlongest.length > 0) {
-		if (otherlongest.length > 0)
-			html += "<br>";
-		const s = (unfoundlongest.length > 1);
-		html += `Also in the grid ${s?"were these":"was this"} ${maxlength}-letter word${s?"s":""}:<br>`;
-		for (let w of unfoundlongest)
-			html += `<span class='findmatches'>${w}</span> `;
-	}
 	const disp = document.querySelector("#answer");
 	disp.innerHTML = html;
-	for (let w of document.querySelectorAll("span.findmatches"))
-		w.onclick = findmatches;
 	return ret;
 }
 
@@ -724,8 +666,7 @@ function inner_setupgame() {
 	document.querySelector("#randomize") .style.visibility = "hidden";
 	//document.querySelector("#otherlongest").textContent = "";
 	updatecells(grid);
-	updateremaining(targets);
-	updatelongest(targets);
+	document.querySelector("#targetlength").innerText = `Target word is ${targetword.length}-letters`;
 	let enter = document.querySelector("#enter");
 	enter.onclick = (event) => { play(); };
 	enter.textContent = "⏎";
