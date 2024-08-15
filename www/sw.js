@@ -1,9 +1,9 @@
-const cacheName = "woggle-v8";
+const cacheName = "woggle-v9";
 const files = [
 	"/",
 	"/index.html",
-	"/style8.css",
-	"/code8.js",
+	"/style9.css",
+	"/code9.js",
 	"/dic.js",
 	"/favicon.ico",
 	"/favicon-16x16.png",
