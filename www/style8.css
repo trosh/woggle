@@ -40,7 +40,7 @@ td {
 	border: 2px solid rgba(0,0,0,0);
 	font-size: 1.8em;
 }
-td.good {
+td.good, #history>li.histwin {
 	background-color: green;
 	color: #ddd;
 }
@@ -72,9 +72,6 @@ p#bottom {
 	margin: 1px auto;
 	background-color: #333;
 	list-style-position: inside;
-}
-li.histwin {
-	color: green;
 }
 a, span.findmatches {
 	text-decoration: underline dashed;
