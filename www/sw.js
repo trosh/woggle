@@ -1,9 +1,9 @@
-const cacheName = "woggle-v9";
+const cacheName = "woggle-v10";
 const files = [
 	"/",
 	"/index.html",
-	"/style9.css",
-	"/code9.js",
+	"/style10.css",
+	"/code10.js",
 	"/dic_original.json",
 	"/dic_target.json",
 	"/dic_player.json",

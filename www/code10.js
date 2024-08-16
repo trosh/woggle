@@ -756,7 +756,7 @@ function setuplangs() {
 }
 
 window.onload = (event) => {
-	document.querySelector("#update_date").textContent = "2023-12-13";
+	document.querySelector("#update_date").textContent = "2024-08-16";
 	document.querySelector("#showrules").onclick = showrulesframe;
 	loading_original = document.querySelector("#loading_original");
 	loading_target   = document.querySelector("#loading_target");
