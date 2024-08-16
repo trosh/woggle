@@ -7,7 +7,9 @@
 //	});
 //}
 
-import {dic} from "./dic.js";
+let dic_original = false; // Original lists of words, for wiktionary URLs
+let dic_target   = false; // Prefix dictionaries with most "popular" words for target search
+let dic_player   = false; // Prefix dictionaries with many words for player moves validation
 
 function getstored(name) {
 	const value = localStorage.getItem(name);
@@ -51,12 +53,12 @@ let rand;
 const NUMTRIES = 5;
 const LANGS = ["en", "fr", "en_fr"];
 
-let ref, grid, targets, targetword, targetpath, longestwords, word, counter;
+let ref_target, ref_player, grid, targets, targetword, targetpath, longestwords, word, counter;
 let valid, curpath, good, bad;
-let curlangs=[], getlang;
+let curlangs=[], getlang, langs, date;
 let randomgame=false;
 
-function buildref(langs) {
+function buildref(dic, langs) {
 	let ref = {};
 	let numwords = 0;
 	let pos = [];
@@ -336,7 +338,7 @@ function findmatches(evt) {
 	let html = "";
 	let nb = 0;
 	for (let lang of curlangs) {
-		for (let orig of dic[lang + "_orig"]) {
+		for (let orig of dic_original[lang]) {
 			const conv = orig.toUpperCase().normalize("NFD")
 				.replace(/[\u0300-\u03f6]/g, "") ;
 			if (conv !== word)
@@ -458,7 +460,7 @@ function play() {
 	try {
 	if (word.includes(" "))
 		return false;
-	if (!inref(ref, word)) {
+	if (!inref(ref_player, word)) {
 		word += " not in dict ";
 		curpath = [];
 		update();
@@ -566,7 +568,7 @@ function showtarget(win) {
 	return ret;
 }
 
-function setup_from_localStorage(date, langs) {
+function setup_from_localStorage(langs) {
 	if (randomgame)
 		return false;
 	let prevdate = getstored("date");
@@ -629,14 +631,14 @@ function inner_setupgame() {
 	if (getlang === undefined || getlang.length === 0)
 		getlang = "en"; // default value
 	document.querySelector("#curlang").textContent = langname(getlang);
-	let langs = getlang.split("_");
+	langs = getlang.split("_");
 	let numwords;
-	[ref, numwords] = buildref(langs);
+	[ref_target, numwords] = buildref(dic_target, langs);
 	console.log(`There are ${numwords} words in the dictionary`);
 	if (numwords == 0)
 		return true;
 	curlangs = langs;
-	let date = new Date().toISOString().slice(0, 10);
+	date = new Date().toISOString().slice(0, 10);
 	let seed = srand(date+langs);
 	if (randomgame) {
 		seed = (Math.random() * (1 << 30)) | 0;
@@ -649,7 +651,7 @@ function inner_setupgame() {
 	let targetwords;
 	while (true) {
 		grid = randgrid("Classic");
-		targets = findwords(ref, grid);
+		targets = findwords(ref_target, grid);
 		const longest = document.querySelector("#longest");
 		targetwords = Object.keys(targets);
 		if (targetwords.length > 30)
@@ -695,7 +697,6 @@ function inner_setupgame() {
 		histli.classList = "";
 	}
 	incrementcounter();
-	setup_from_localStorage(date, langs);
 	return true;
 }
 
@@ -757,6 +758,19 @@ function setuplangs() {
 window.onload = (event) => {
 	document.querySelector("#update_date").textContent = "2023-12-13";
 	document.querySelector("#showrules").onclick = showrulesframe;
+	fetch("dic_target.json").then(resp => resp.json()).then(json => {
+		dic_target = json; // Required to start building grid
+		setupgame(); // Provides `langs`
+		fetch("dic_player.json").then(resp => resp.json()).then(json => {
+			dic_player = json;
+			let numwords_player;
+			[ref_player, numwords_player] = buildref(dic_player, langs);
+			console.log(`numwords_player: ${numwords_player}`);
+			setup_from_localStorage(langs); // Requires `ref_player`
+		});
+		fetch("dic_original.json").then(resp => resp.json()).then(json => {
+			dic_original = json;
+		});
+	});
 	setuplangs();
-	setupgame();
 };

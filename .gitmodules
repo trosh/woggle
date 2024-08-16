@@ -1,6 +1,6 @@
-[submodule "scrabble-dictionary"]
-	path = scrabble-dictionary
-	url = https://github.com/seanpatlan/scrabble-dictionary
 [submodule "dictionary"]
 	path = dictionary
 	url = https://github.com/dolph/dictionary
+[submodule "wiktionaire-fr"]
+	path = wiktionaire-fr
+	url = https://github.com/drogbadvc/wiktionaire-fr
