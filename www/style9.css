@@ -125,3 +125,8 @@ div#rulesframe {
 p#langline {
 	line-height: 2em;
 }
+#loading_msgs > li {
+	display: none;
+	color: #777;
+	font-size: 0.8em;
+}

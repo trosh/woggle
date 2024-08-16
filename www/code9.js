@@ -758,18 +758,27 @@ function setuplangs() {
 window.onload = (event) => {
 	document.querySelector("#update_date").textContent = "2023-12-13";
 	document.querySelector("#showrules").onclick = showrulesframe;
+	loading_original = document.querySelector("#loading_original");
+	loading_target   = document.querySelector("#loading_target");
+	loading_player   = document.querySelector("#loading_player");
+	loading_target.style.display = "block";
 	fetch("dic_target.json").then(resp => resp.json()).then(json => {
 		dic_target = json; // Required to start building grid
+		document.querySelector("#loading_target").style.display = "none";
 		setupgame(); // Provides `langs`
+		loading_player.style.display = "block";
 		fetch("dic_player.json").then(resp => resp.json()).then(json => {
 			dic_player = json;
+			loading_player.style.display = "none";
 			let numwords_player;
 			[ref_player, numwords_player] = buildref(dic_player, langs);
 			console.log(`numwords_player: ${numwords_player}`);
 			setup_from_localStorage(langs); // Requires `ref_player`
-		});
-		fetch("dic_original.json").then(resp => resp.json()).then(json => {
-			dic_original = json;
+			loading_original.style.display = "block";
+			fetch("dic_original.json").then(resp => resp.json()).then(json => {
+				dic_original = json;
+				loading_original.style.display = "none";
+			});
 		});
 	});
 	setuplangs();
