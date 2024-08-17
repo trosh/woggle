@@ -758,16 +758,18 @@ function setuplangs() {
 window.onload = (event) => {
 	document.querySelector("#update_date").textContent = "2024-08-16";
 	document.querySelector("#showrules").onclick = showrulesframe;
-	loading_original = document.querySelector("#loading_original");
-	loading_target   = document.querySelector("#loading_target");
-	loading_player   = document.querySelector("#loading_player");
+	const loading_original = document.querySelector("#loading_original");
+	const loading_target   = document.querySelector("#loading_target");
+	const loading_player   = document.querySelector("#loading_player");
 	loading_target.style.display = "block";
 	fetch("dic_target.json").then(resp => resp.json()).then(json => {
+		console.log("Parsed dic_target");
 		dic_target = json; // Required to start building grid
 		document.querySelector("#loading_target").style.display = "none";
 		setupgame(); // Provides `langs`
 		loading_player.style.display = "block";
 		fetch("dic_player.json").then(resp => resp.json()).then(json => {
+			console.log("Parsed dic_player");
 			dic_player = json;
 			loading_player.style.display = "none";
 			let numwords_player;
@@ -776,6 +778,7 @@ window.onload = (event) => {
 			setup_from_localStorage(langs); // Requires `ref_player`
 			loading_original.style.display = "block";
 			fetch("dic_original.json").then(resp => resp.json()).then(json => {
+				console.log("Parsed dic_original");
 				dic_original = json;
 				loading_original.style.display = "none";
 			});
