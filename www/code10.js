@@ -249,8 +249,13 @@ function updateword() {
 }
 
 function update() {
-	for (let g=0; g<16; ++g)
-		document.querySelector(`#cell_${g}`).classList = "";
+	for (let g=0; g<16; ++g) {
+		const cell = document.querySelector(`#cell_${g}`);
+		cell.classList.remove("curfirst");
+		cell.classList.remove("cur");
+		cell.classList.remove("good");
+		cell.classList.remove("bad");
+	}
 	if (curpath.length > 0) {
 		let nextvalid = [];
 		let [i,j] = curpath[curpath.length - 1];
@@ -520,6 +525,10 @@ function play() {
 		word = "";
 		update();
 		incrementcounter();
+		const button = document.querySelector("#togglecolours");
+		button.classList.add("desaturate");
+		button.style.visibility = "visible";
+		button.onclick = togglecolours;
 	}
 	} catch (e) {
 		window.alert(`l. ${e.lineNumber}: ${e}`);
@@ -566,6 +575,23 @@ function showtarget(win) {
 	const disp = document.querySelector("#answer");
 	disp.innerHTML = html;
 	return ret;
+}
+
+function togglecolours() {
+	const button = document.querySelector("#togglecolours");
+	if (button.classList.contains("desaturate")) {
+		for (let g=0; g<16; ++g) {
+			const cell = document.querySelector(`#cell_${g}`);
+			cell.classList.add("desaturate");
+		}
+		button.classList.remove("desaturate");
+	} else {
+		for (let g=0; g<16; ++g) {
+			const cell = document.querySelector(`#cell_${g}`);
+			cell.classList.remove("desaturate");
+		}
+		button.classList.add("desaturate");
+	}
 }
 
 function setup_from_localStorage(langs) {

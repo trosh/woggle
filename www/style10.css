@@ -54,6 +54,17 @@ td.cur {
 td.curfirst {
 	color: yellow;
 }
+td.desaturate.good {
+	background-color: #4a4;
+	color: #333;
+}
+td.desaturate.bad {
+	background-color: #c66;
+	color: #333;
+}
+.desaturate {
+	filter: grayscale(100%);
+}
 p#bottom {
 	margin: .5em .5em;
 	font-size: 1.5em;
@@ -86,7 +97,7 @@ div#bottombutts {
 button {
 	font-size: 0.7em;
 }
-button#randomize, button#shareagain {
+button#randomize, button#shareagain, button#togglecolours {
 	visibility: hidden;
 }
 div#endframebg {
