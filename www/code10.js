@@ -654,11 +654,18 @@ function inner_setupgame() {
 		targets = findwords(ref_target, grid);
 		const longest = document.querySelector("#longest");
 		targetwords = Object.keys(targets);
-		if (targetwords.length > 30)
-			break;
-		console.log(`Only ${targetwords.length} target words in the grid, throwing the dice again`);
+		if (targetwords.length < 30) {
+			console.log(`Only ${targetwords.length} target words in the grid, throwing the dice again`);
+			continue;
+		}
+		longestwords = findlongestwords(targets);
+		const maxlength = longestwords[0].length
+		if (maxlength < 7) {
+			console.log(`Longest word is only ${maxlength}-letters long, throwing the dice again`);
+			continue;
+		}
+		break;
 	}
-	longestwords = findlongestwords(targets);
 	targetword = longestwords[rand() % longestwords.length];
 	targetpath = targets[targetword][rand() % targets[targetword].length];
 	//console.log(targetword);
