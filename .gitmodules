@@ -4,3 +4,6 @@
 [submodule "wiktionaire-fr"]
 	path = wiktionaire-fr
 	url = https://github.com/drogbadvc/wiktionaire-fr
+[submodule "english-wordlist-from-wiktionary"]
+	path = english-wordlist-from-wiktionary
+	url = https://github.com/trosh/english-wordlist-from-wiktionary.git
