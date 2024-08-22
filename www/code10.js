@@ -465,6 +465,10 @@ function play() {
 	try {
 	if (word.includes(" "))
 		return false;
+	if (ref_player === null) {
+		window.alert("The player dictionary is not yet ready…");
+		return false;
+	}
 	if (!inref(ref_player, word)) {
 		word += " not in dict ";
 		curpath = [];
@@ -674,14 +678,13 @@ function inner_setupgame() {
 		console.log(`date=${date} srand(${date+langs})`);
 		rand = frand(seed[0]);
 	}
-	let targetwords;
 	while (true) {
 		grid = randgrid("Classic");
 		targets = findwords(ref_target, grid);
 		const longest = document.querySelector("#longest");
-		targetwords = Object.keys(targets);
-		if (targetwords.length < 30) {
-			console.log(`Only ${targetwords.length} target words in the grid, throwing the dice again`);
+		const targetwords = Object.keys(targets).filter(word => word.length >= 5);
+		if (targetwords.length < 10) {
+			console.log(`Only ${targetwords.length} target words with ≥ 5 letters in the grid, throwing the dice again`);
 			continue;
 		}
 		longestwords = findlongestwords(targets);

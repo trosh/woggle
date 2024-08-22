@@ -6,31 +6,41 @@ import random
 import sys
 import re
 
-def filter_dic(fname):
+def filter_dic(fname, upper=True):
 	numwords = 0
-	dic_original = set()
-	dic_uppercase = set()
-	badletter = re.compile("[^A-Z]")
+	dic = set()
+	diacritics = u"\u0300-\u036F" # primary Combining Diacritical Marks codepage
+	re_nonrepr = re.compile(f"[^A-Za-z{diacritics}]")
+	re_acronym = re.compile("[A-Z][A-Z]")
+	re_upper   = re.compile("[A-Z]")
 	with open(fname, "r") as f:
 		for line in f:
-			orig = line.strip()
-			if orig.lower() != orig:
+			word = line.strip()
+			if len(word) > 16:
 				continue
-			word = unicodedata.normalize("NFD", orig.upper()) \
-				.encode("ascii", "ignore").decode("utf-8")
-			if badletter.search(word):
+			# Check all characters can be represented as ASCII
+			decomposed = unicodedata.normalize("NFD", word)
+			if re_nonrepr.search(decomposed):
 				continue
-			dic_original.add(orig)
-			dic_uppercase.add(word)
+			# Remove diacritics
+			nodiacritics = decomposed \
+				.encode("ascii", "ignore") \
+				.decode("utf-8")
+			if not upper and re_upper.search(word):
+				continue
+			# Check there's no consecutive uppers
+			if re_acronym.search(nodiacritics):
+				continue
+			dic.add(word)
 			# Update progress line
 			numwords += 1
 			if numwords % 10000 == 0:
 				print(f"filter_dic({fname+')':<30}{numwords:>7}", end="\r")
 	print(f"filter_dic({fname+')':<30}{numwords:>7}")
-	return [dic_original, dic_uppercase]
+	return dic
 
 def output_original(fout, dic_original):
-	print(f"output_original({fout.name+')':<30}")
+	print(f"output_original({fout.name})")
 	first = True
 	for word in dic_original:
 		if first:
@@ -40,7 +50,7 @@ def output_original(fout, dic_original):
 		fout.write(f'"{word}"')
 
 def buildref(dic_uppercase):
-	print("buildref(…)")
+	print(f"buildref({len(dic_uppercase)})")
 	ref = dict()
 	for word in dic_uppercase:
 		_ref = ref
@@ -52,20 +62,40 @@ def buildref(dic_uppercase):
 			_ref[True] = "%" # Value doesn't matter
 	return ref
 
-def outputref(fout, ref):
+def _outputref(fout, ref):
 	if True in ref:
 		fout.write(".")
 	for l in ref:
 		if l == True:
 			continue
 		fout.write(l)
-		outputref(fout, ref[l])
+		_outputref(fout, ref[l])
 	fout.write(";")
 
-[player_en_original, player_en_uppercase] = filter_dic("player_en.txt")
-[player_fr_original, player_fr_uppercase] = filter_dic("dela-fr-public-u8.dic.txt")
-[target_en_original, target_en_uppercase] = filter_dic("target_en.txt")
-[target_fr_original, target_fr_uppercase] = filter_dic("target_fr.txt")
+def outputref(fout, ref):
+	print(f"outputref({fout.name})")
+	_outputref(fout, ref)
+
+enwiktionary_filtered = set()
+scrabble_extended = set()
+
+enwikt_filt        = filter_dic("english-wordlist-from-wiktionary/english-wordlist.txt")
+enscrabble_ext     = filter_dic("dictionary/enable1.txt")
+enpopular          = filter_dic("dictionary/popular.txt")
+player_fr_original = filter_dic("dela-fr-public-u8.dic.txt", upper=False)
+target_fr_original = filter_dic("target_fr.txt", upper=False)
+
+print("player_en_original = enwikt_filt union enscrabble_ext")
+player_en_original = enwikt_filt.union(enscrabble_ext)
+print(f"player_en_original = {len(player_en_original)} words")
+print("target_en_original = enpopular inter player_en_original")
+target_en_original = enpopular.intersection(player_en_original)
+print(f"target_en_original = {len(target_en_original)} words")
+
+player_en_uppercase = set(map(str.upper, player_en_original))
+target_en_uppercase = set(map(str.upper, target_en_original))
+player_fr_uppercase = set(map(str.upper, player_fr_original))
+target_fr_uppercase = set(map(str.upper, target_fr_original))
 
 missing_en = target_en_original - player_en_original
 missing_fr = target_fr_original - player_fr_original
@@ -119,3 +149,17 @@ with open("dic_target.json", "w") as f:
 	outputref(f, ref_fr_target)
 	f.write('"\n')
 	f.write('}\n')
+
+test_kept_words = [
+	"discombobulated", "stat", "stats", "realise", "saviour",
+	"smartest", "thrice", #"touché",
+	]
+
+test_removed_words = [
+	"MA", "dc",
+	]
+
+for w in test_kept_words:
+	assert(w in player_en_original)
+for w in test_removed_words:
+	assert(w not in player_en_original)
