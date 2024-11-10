@@ -52,7 +52,7 @@ def output_original(fout, dic_original):
 def buildref(dic_uppercase):
 	print(f"buildref({len(dic_uppercase)})")
 	ref = dict()
-	for word in dic_uppercase:
+	for word in sorted(dic_uppercase):
 		_ref = ref
 		for c in word:
 			if c not in _ref:
