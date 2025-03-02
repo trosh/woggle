@@ -52,9 +52,14 @@ def output_original(fout, dic_original):
 def buildref(dic_uppercase):
 	print(f"buildref({len(dic_uppercase)})")
 	ref = dict()
-	for word in sorted(dic_uppercase):
+	for word_uppercase in sorted(dic_uppercase):
+		# Remove diacritics
+		word_uppercase_nodiacritics \
+			= unicodedata.normalize("NFD", word_uppercase) \
+			.encode("ascii", "ignore") \
+			.decode("utf-8")
 		_ref = ref
-		for c in word:
+		for c in word_uppercase_nodiacritics:
 			if c not in _ref:
 				_ref[c] = dict()
 			_ref = _ref[c]
