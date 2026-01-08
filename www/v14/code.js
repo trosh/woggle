@@ -811,13 +811,13 @@ window.onload = (event) => {
 	const loading_target   = document.querySelector("#loading_target");
 	const loading_player   = document.querySelector("#loading_player");
 	loading_target.style.display = "block";
-	fetch("/v13/dic_target.json").then(resp => resp.json()).then(json => {
+	fetch("/v14/dic_target.json").then(resp => resp.json()).then(json => {
 		console.log("Parsed dic_target");
 		dic_target = json; // Required to start building grid
 		document.querySelector("#loading_target").style.display = "none";
 		setupgame(); // Provides `langs`
 		loading_player.style.display = "block";
-		fetch("/v13/dic_player.json").then(resp => resp.json()).then(json => {
+		fetch("/v14/dic_player.json").then(resp => resp.json()).then(json => {
 			console.log("Parsed dic_player");
 			dic_player = json;
 			loading_player.style.display = "none";
@@ -826,7 +826,7 @@ window.onload = (event) => {
 			console.log(`numwords_player: ${numwords_player}`);
 			setup_from_localStorage(langs); // Requires `ref_player`
 			loading_original.style.display = "block";
-			fetch("/v13/dic_original.json").then(resp => resp.json()).then(json => {
+			fetch("/v14/dic_original.json").then(resp => resp.json()).then(json => {
 				console.log("Parsed dic_original");
 				dic_original = json;
 				loading_original.style.display = "none";
