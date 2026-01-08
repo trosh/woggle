@@ -668,7 +668,20 @@ function inner_setupgame() {
 	if (numwords == 0)
 		return true;
 	curlangs = langs;
-	date = new Date().toISOString().slice(0, 10);
+	let archive;
+	if (document.URL.includes("?")) {
+		getarchive = document.URL.split("?")[1].split("&")
+			?.find((v) => v.startsWith("archive="))
+			?.split("=")[1];
+		archive = parseInt(getarchive);
+	}
+	if (archive === undefined // No GET parameter provided
+	 || archive === NaN // Conversion error
+	 || archive < 0) // No reading the future! :-)
+		archive = 0; // default value
+	// Date is `archive` days back
+	date = new Date(new Date().setDate(new Date().getDate() - archive))
+	date = date.toISOString().slice(0, 10);
 	let seed = srand(date+langs);
 	if (randomgame) {
 		seed = (Math.random() * (1 << 30)) | 0;
