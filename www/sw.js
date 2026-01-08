@@ -1,12 +1,12 @@
-const cacheName = "woggle-v15";
+const cacheName = "woggle-v16";
 const files = [
 	"/",
 	"/index.html",
-	"/v15/style.css",
-	"/v15/code.js",
-	"/v15/dic_original.json",
-	"/v15/dic_target.json",
-	"/v15/dic_player.json",
+	"/v16/style.css",
+	"/v16/code.js",
+	"/v16/dic_original.json",
+	"/v16/dic_target.json",
+	"/v16/dic_player.json",
 	"/favicon.ico",
 	"/favicon-16x16.png",
 	"/favicon-32x32.png",
