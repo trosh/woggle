@@ -633,6 +633,35 @@ function setup_from_localStorage(langs) {
 	return true;
 }
 
+function get_archive_date(date) {
+	getarchive = document.URL.split("?")?
+		[1].split("&")?
+		.find((v) => v.startsWith("archive="))?
+		.split("=")[1];
+	if (getarchive === undefined
+	 || getarchive.length === 0)
+		return undefined;
+	archive = new Date(getarchive);
+	if (isNaN(archive.valueOf())) {
+		console.error(`Failed to parse archive=${getarchive}`);
+		return undefined;
+	}
+	if (archive.getDate() > date.getDate()) {
+		console.error(`No reading the future! archive=${getarchive}`);
+		return undefined;
+	}
+	console.log(`archive=${archive}`);
+	return archive;
+}
+
+function get_date_string() {
+	date = new Date();
+	archive = get_archive_date(date);
+	if (archive !== undefined)
+		date = archive;
+	return date.toISOString().slice(0, 10);
+}
+
 function inner_setupgame() {
 	console.log(`inner_setupgame(random=${randomgame})`);
 	valid = [];
@@ -668,26 +697,7 @@ function inner_setupgame() {
 	if (numwords == 0)
 		return true;
 	curlangs = langs;
-	let date = new Date();
-	let archive;
-	if (document.URL.includes("?")) {
-		getarchive = document.URL.split("?")[1].split("&")
-			?.find((v) => v.startsWith("archive="))
-			?.split("=")[1];
-		archive = new Date(getarchive);
-		if (isNaN(archive.valueOf())) {
-			console.error(`Failed to parse archive=${getarchive}`);
-			archive = undefined;
-		}
-		if (archive.getDate() > date.getDate()) {
-			console.error(`No reading the future! archive=${getarchive}`);
-			archive = undefined;
-		}
-		console.log(`archive=${archive}`);
-	}
-	if (archive !== undefined)
-		date = archive;
-	date = date.toISOString().slice(0, 10);
+	date = get_date_string();
 	let seed = srand(date+langs);
 	if (randomgame) {
 		seed = (Math.random() * (1 << 30)) | 0;
