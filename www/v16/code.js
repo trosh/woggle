@@ -634,10 +634,11 @@ function setup_from_localStorage(langs) {
 }
 
 function get_archive_date(date) {
-	getarchive = document.URL.split("?")?
-		[1].split("&")?
-		.find((v) => v.startsWith("archive="))?
-		.split("=")[1];
+	if (!document.URL.includes("?"))
+		return undefined;
+	getarchive = document.URL.split("?")[1].split("&")
+		?.find((v) => v.startsWith("archive="))
+		?.split("=")[1];
 	if (getarchive === undefined
 	 || getarchive.length === 0)
 		return undefined;
