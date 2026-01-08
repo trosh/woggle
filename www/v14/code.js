@@ -668,19 +668,25 @@ function inner_setupgame() {
 	if (numwords == 0)
 		return true;
 	curlangs = langs;
+	let date = new Date();
 	let archive;
 	if (document.URL.includes("?")) {
 		getarchive = document.URL.split("?")[1].split("&")
 			?.find((v) => v.startsWith("archive="))
 			?.split("=")[1];
-		archive = parseInt(getarchive);
+		archive = new Date(getarchive);
+		if (isNaN(archive.valueOf())) {
+			console.error(`Failed to parse archive=${getarchive}`);
+			archive = undefined;
+		}
+		if (archive.getDate() > date.getDate()) {
+			console.error(`No reading the future! archive=${getarchive}`);
+			archive = undefined;
+		}
+		console.log(`archive=${archive}`);
 	}
-	if (archive === undefined // No GET parameter provided
-	 || archive === NaN // Conversion error
-	 || archive < 0) // No reading the future! :-)
-		archive = 0; // default value
-	// Date is `archive` days back
-	date = new Date(new Date().setDate(new Date().getDate() - archive))
+	if (archive !== undefined)
+		date = archive;
 	date = date.toISOString().slice(0, 10);
 	let seed = srand(date+langs);
 	if (randomgame) {
